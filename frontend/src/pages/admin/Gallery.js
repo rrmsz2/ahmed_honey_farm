@@ -215,7 +215,7 @@ const Gallery = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl" dir="rtl">
           <DialogHeader>
-            <DialogTitle>إضافة صورة جديدة</DialogTitle>
+            <DialogTitle>{isEditing ? 'تعديل الصورة' : 'إضافة صورة جديدة'}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4 mt-4">
