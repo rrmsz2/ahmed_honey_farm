@@ -56,8 +56,8 @@ const Story = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="section-title mb-4">{content.story.title}</h2>
-            <p className="section-subtitle">{content.story.subtitle}</p>
+            <h2 className="section-title mb-4">{content.title}</h2>
+            <p className="section-subtitle">{content.subtitle}</p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 mb-12 transform hover:scale-[1.02] transition-transform duration-300">
