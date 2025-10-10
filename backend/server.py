@@ -1,14 +1,13 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
-import uuid
-from datetime import datetime, timezone
+from routes import public, admin
+from utils.auth import get_password_hash
+from datetime import datetime
 
 
 ROOT_DIR = Path(__file__).parent
@@ -20,59 +19,49 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Create the main app without a prefix
-app = FastAPI()
+app = FastAPI(title="Ahmad Honey Farm API")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
-
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-class StatusCheckCreate(BaseModel):
-    client_name: str
-
-# Add your routes to the router instead of directly to app
+# Health check endpoint
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Ahmad Honey Farm API", "status": "running"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+# Dependency to inject db into route handlers
+async def get_db_dependency():
+    return db
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
+# Middleware to inject database into request state
+@app.middleware("http")
+async def db_middleware(request: Request, call_next):
+    request.state.db = db
+    response = await call_next(request)
+    return response
 
-# Include the router in the main app
+# Include routers
+# Public routes
+api_router.include_router(
+    public.router,
+    tags=["Public"]
+)
+
+# Admin routes
+api_router.include_router(
+    admin.router,
+    prefix="/admin",
+    tags=["Admin"]
+)
+
+# Include the main API router
 app.include_router(api_router)
 
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -83,6 +72,27 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Startup event to initialize database
+@app.on_event("startup")
+async def startup_db():
+    """Initialize database with default data"""
+    try:
+        # Check if admin user exists
+        admin_exists = await db.admin_users.find_one({'username': 'admin'})
+        if not admin_exists:
+            # Create default admin user
+            default_admin = {
+                'username': 'admin',
+                'password_hash': get_password_hash('admin123'),  # Change this password!
+                'created_at': datetime.utcnow()
+            }
+            await db.admin_users.insert_one(default_admin)
+            logger.info("Default admin user created: admin/admin123")
+        
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Error initializing database: {str(e)}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
