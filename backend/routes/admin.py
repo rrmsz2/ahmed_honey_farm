@@ -280,9 +280,10 @@ async def add_gallery_image(
         image_dict = gallery_image.dict()
         image_dict['created_at'] = datetime.utcnow()
         
-        await db.gallery.insert_one(image_dict)
+        result = await db.gallery.insert_one(image_dict)
         
-        return {"success": True, "image": image_dict}
+        # Return without MongoDB _id
+        return {"success": True, "message": "Image added successfully"}
     except Exception as e:
         logger.error(f"Error adding gallery image: {str(e)}")
         raise HTTPException(status_code=500, detail="Error adding gallery image")
