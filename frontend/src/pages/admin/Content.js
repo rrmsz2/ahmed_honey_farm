@@ -383,7 +383,6 @@ const Content = () => {
                     </div>
                   </div>
                 </div>
-              </div>
 
                 <Button 
                   onClick={() => handleSaveSection('story')} 
