@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 async def admin_login(credentials: AdminLogin, request: Request):
     """Admin login endpoint"""
     try:
+        db = request.state.db
         # Find admin user
         admin = await db.admin_users.find_one({'username': credentials.username})
         
