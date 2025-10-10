@@ -54,6 +54,13 @@ api_router.include_router(
     tags=["Admin"]
 )
 
+# Settings routes
+api_router.include_router(
+    settings.router,
+    prefix="/admin/settings",
+    tags=["Settings"]
+)
+
 # Include the main API router
 app.include_router(api_router)
 
