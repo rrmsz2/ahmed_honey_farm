@@ -162,14 +162,14 @@ async def verify_otp(verification: OTPVerification, request: Request):
         }
         
         # Send confirmation to customer
-        send_order_confirmation(
+        await send_order_confirmation(
             order['customer_phone'],
             order['customer_name'],
             order_details
         )
         
         # Send notification to admin (with 6 second delay built into function)
-        send_admin_notification(order_details)
+        await send_admin_notification(order_details)
         
         return {
             "success": True,
