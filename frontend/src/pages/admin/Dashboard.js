@@ -93,6 +93,13 @@ const Dashboard = () => {
       icon: FileText,
       path: '/admin/content',
       color: 'bg-orange-500'
+    },
+    {
+      title: 'الإعدادات',
+      description: 'إعدادات واتساب والنظام',
+      icon: TrendingUp,
+      path: '/admin/settings',
+      color: 'bg-red-500'
     }
   ];
 
