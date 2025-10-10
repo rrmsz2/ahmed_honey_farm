@@ -152,9 +152,9 @@ async def create_product(
         product_dict = product.dict()
         product_dict['created_at'] = datetime.utcnow()
         
-        await db.products.insert_one(product_dict)
+        result = await db.products.insert_one(product_dict)
         
-        return {"success": True, "product": product_dict}
+        return {"success": True, "message": "Product created successfully"}
     except Exception as e:
         logger.error(f"Error creating product: {str(e)}")
         raise HTTPException(status_code=500, detail="Error creating product")
