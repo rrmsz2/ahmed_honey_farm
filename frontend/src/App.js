@@ -11,6 +11,8 @@ import AdminLogin from './pages/admin/AdminLogin';
 import Dashboard from './pages/admin/Dashboard';
 import Orders from './pages/admin/Orders';
 import Products from './pages/admin/Products';
+import Gallery from './pages/admin/Gallery';
+import Content from './pages/admin/Content';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
