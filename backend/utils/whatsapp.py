@@ -124,8 +124,9 @@ async def send_order_confirmation(recipient: str, name: str, order_details: dict
     return send_whatsapp_message(recipient, message, api_key=settings['api_key'])
 
 
-def send_admin_notification(order_details: dict) -> dict:
+async def send_admin_notification(order_details: dict) -> dict:
     """Send new order notification to admin"""
+    settings = await get_whatsapp_settings()
     
     # Format product list
     products_text = "\n".join([
@@ -151,4 +152,4 @@ def send_admin_notification(order_details: dict) -> dict:
     logger.info("Waiting 6 seconds before sending admin notification...")
     time.sleep(6)
     
-    return send_whatsapp_message(ADMIN_PHONE, message)
+    return send_whatsapp_message(settings['admin_phone'], message, api_key=settings['api_key'])
