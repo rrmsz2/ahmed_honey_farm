@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 async def get_products(request: Request):
     """Get all available products"""
     try:
+        db = request.state.db
         products = await db.products.find({"available": True}).to_list(100)
         return {"products": products}
     except Exception as e:
@@ -21,9 +22,10 @@ async def get_products(request: Request):
         raise HTTPException(status_code=500, detail="Error fetching products")
 
 @router.get("/site-content")
-async def get_site_content(db: AsyncIOMotorDatabase):
+async def get_site_content(request: Request):
     """Get all site content"""
     try:
+        db = request.state.db
         content = await db.site_content.find().to_list(100)
         content_dict = {}
         for item in content:
@@ -37,9 +39,10 @@ async def get_site_content(db: AsyncIOMotorDatabase):
         raise HTTPException(status_code=500, detail="Error fetching site content")
 
 @router.get("/gallery")
-async def get_gallery(db: AsyncIOMotorDatabase):
+async def get_gallery(request: Request):
     """Get gallery images"""
     try:
+        db = request.state.db
         images = await db.gallery.find().sort("order", 1).to_list(100)
         return {"images": images}
     except Exception as e:
@@ -47,7 +50,7 @@ async def get_gallery(db: AsyncIOMotorDatabase):
         raise HTTPException(status_code=500, detail="Error fetching gallery")
 
 @router.post("/orders")
-async def create_order(order_data: OrderCreate, db: AsyncIOMotorDatabase):
+async def create_order(order_data: OrderCreate, request: Request):
     """
     Create new order and send OTP for verification
     """
