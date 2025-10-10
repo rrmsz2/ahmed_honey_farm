@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { Toaster } from './components/ui/sonner';
 import Landing from './pages/Landing';
+import Checkout from './pages/Checkout';
 import AdminLogin from './pages/admin/AdminLogin';
 import Dashboard from './pages/admin/Dashboard';
 import Orders from './pages/admin/Orders';
