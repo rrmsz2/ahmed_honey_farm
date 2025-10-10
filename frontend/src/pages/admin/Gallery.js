@@ -139,7 +139,12 @@ const Gallery = () => {
               <h1 className="text-2xl font-bold text-gray-900">إدارة معرض الصور</h1>
             </div>
             <Button
-              onClick={() => setIsDialogOpen(true)}
+              onClick={() => {
+                setIsEditing(false);
+                setEditingImageId(null);
+                setNewImage({ url: '', caption_ar: '', caption_en: '', order: 0 });
+                setIsDialogOpen(true);
+              }}
               className="bg-green-600 hover:bg-green-700"
             >
               <Plus className="w-4 h-4 ml-2" />
