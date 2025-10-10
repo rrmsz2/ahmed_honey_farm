@@ -3,6 +3,7 @@ import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import { Toaster } from './components/ui/sonner';
 import Landing from './pages/Landing';
 import AdminLogin from './pages/admin/AdminLogin';
