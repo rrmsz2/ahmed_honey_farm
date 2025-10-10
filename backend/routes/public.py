@@ -15,7 +15,7 @@ async def get_products(request: Request):
     """Get all available products"""
     try:
         db = request.state.db
-        products = await db.products.find({"available": True}).to_list(100)
+        products = await db.products.find({"available": True}, {"_id": 0}).to_list(100)
         return {"products": products}
     except Exception as e:
         logger.error(f"Error fetching products: {str(e)}")
