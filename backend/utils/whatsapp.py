@@ -59,7 +59,7 @@ def send_whatsapp_message(recipient: str, text: str, file_url: str = None, api_k
         # Prepare parameters
         params = {
             'recipient': recipient,
-            'apikey': WHATSAPP_API_KEY,
+            'apikey': api_key or DEFAULT_WHATSAPP_API_KEY,
             'text': text,
             'json': 'yes'
         }
