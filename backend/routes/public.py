@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from models.models import Order, OrderCreate, OTPVerification, Product
 from utils.whatsapp import send_otp_message, send_order_confirmation, send_admin_notification
@@ -10,12 +10,8 @@ import os
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-def get_db():
-    """Get database instance - will be injected"""
-    pass
-
 @router.get("/products")
-async def get_products(db: AsyncIOMotorDatabase):
+async def get_products(request: Request):
     """Get all available products"""
     try:
         products = await db.products.find({"available": True}).to_list(100)
