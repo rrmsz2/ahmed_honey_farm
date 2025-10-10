@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from routes import public, admin
+from routes import public, admin, settings
 from utils.auth import get_password_hash
 from datetime import datetime
 
