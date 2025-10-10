@@ -188,7 +188,7 @@ async def verify_otp(verification: OTPVerification, request: Request):
         raise HTTPException(status_code=500, detail="Error verifying OTP")
 
 @router.post("/orders/resend-otp")
-async def resend_otp(order_id: str, db: AsyncIOMotorDatabase):
+async def resend_otp(order_id: str, request: Request):
     """Resend OTP for an order"""
     try:
         order = await db.orders.find_one({'id': order_id})
