@@ -351,8 +351,39 @@ const Content = () => {
                         dir="ltr"
                       />
                     </div>
+
+                    <div className="mt-6">
+                      <label className="block text-sm font-medium mb-3">Stat Cards</label>
+                      <div className="space-y-3">
+                        {[0, 1, 2].map((index) => (
+                          <div key={index} className="grid grid-cols-2 gap-2 p-3 bg-amber-50 rounded-lg">
+                            <Input
+                              value={content.story?.en?.stats?.[index]?.number || ''}
+                              onChange={(e) => {
+                                const stats = content.story?.en?.stats || [{}, {}, {}];
+                                stats[index] = { ...stats[index], number: e.target.value };
+                                updateContent('story', 'en', 'stats', stats);
+                              }}
+                              placeholder="50+"
+                              dir="ltr"
+                            />
+                            <Input
+                              value={content.story?.en?.stats?.[index]?.label || ''}
+                              onChange={(e) => {
+                                const stats = content.story?.en?.stats || [{}, {}, {}];
+                                stats[index] = { ...stats[index], label: e.target.value };
+                                updateContent('story', 'en', 'stats', stats);
+                              }}
+                              placeholder="Active Beehives"
+                              dir="ltr"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </div>
 
                 <Button 
                   onClick={() => handleSaveSection('story')} 
