@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from models.models import (
     AdminLogin, AdminToken, Product, ProductUpdate,
@@ -13,7 +13,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router.post("/login", response_model=AdminToken)
-async def admin_login(credentials: AdminLogin, db: AsyncIOMotorDatabase):
+async def admin_login(credentials: AdminLogin, request: Request):
     """Admin login endpoint"""
     try:
         # Find admin user
