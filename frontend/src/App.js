@@ -62,6 +62,22 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
+              <Route 
+                path="/admin/gallery" 
+                element={
+                  <ProtectedRoute>
+                    <Gallery />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/content" 
+                element={
+                  <ProtectedRoute>
+                    <Content />
+                  </ProtectedRoute>
+                } 
+              />
             </Routes>
           </BrowserRouter>
           <Toaster />
