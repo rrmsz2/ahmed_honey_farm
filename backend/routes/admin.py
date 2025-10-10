@@ -64,11 +64,12 @@ async def get_all_orders(
 
 @router.get("/orders/stats")
 async def get_order_stats(
-    db: AsyncIOMotorDatabase,
+    request: Request,
     current_admin: dict = Depends(get_current_admin)
 ):
     """Get order statistics"""
     try:
+        db = request.state.db
         total_orders = await db.orders.count_documents({})
         pending_orders = await db.orders.count_documents({'status': 'pending_verification'})
         confirmed_orders = await db.orders.count_documents({'status': 'confirmed'})
@@ -99,11 +100,12 @@ async def get_order_stats(
 async def update_order_status(
     order_id: str,
     status_update: OrderStatusUpdate,
-    db: AsyncIOMotorDatabase,
+    request: Request,
     current_admin: dict = Depends(get_current_admin)
 ):
     """Update order status"""
     try:
+        db = request.state.db
         result = await db.orders.update_one(
             {'id': order_id},
             {
@@ -126,11 +128,12 @@ async def update_order_status(
 
 @router.get("/products")
 async def get_all_products(
-    db: AsyncIOMotorDatabase,
+    request: Request,
     current_admin: dict = Depends(get_current_admin)
 ):
     """Get all products (including unavailable)"""
     try:
+        db = request.state.db
         products = await db.products.find().to_list(100)
         return {"products": products}
     except Exception as e:
@@ -140,11 +143,12 @@ async def get_all_products(
 @router.post("/products")
 async def create_product(
     product: Product,
-    db: AsyncIOMotorDatabase,
+    request: Request,
     current_admin: dict = Depends(get_current_admin)
 ):
     """Create new product"""
     try:
+        db = request.state.db
         product_dict = product.dict()
         product_dict['created_at'] = datetime.utcnow()
         
@@ -159,11 +163,12 @@ async def create_product(
 async def update_product(
     product_id: str,
     product_update: ProductUpdate,
-    db: AsyncIOMotorDatabase,
+    request: Request,
     current_admin: dict = Depends(get_current_admin)
 ):
     """Update product"""
     try:
+        db = request.state.db
         update_data = {k: v for k, v in product_update.dict().items() if v is not None}
         
         if not update_data:
@@ -187,11 +192,12 @@ async def update_product(
 @router.delete("/products/{product_id}")
 async def delete_product(
     product_id: str,
-    db: AsyncIOMotorDatabase,
+    request: Request,
     current_admin: dict = Depends(get_current_admin)
 ):
     """Delete product"""
     try:
+        db = request.state.db
         result = await db.products.delete_one({'id': product_id})
         
         if result.deleted_count == 0:
@@ -206,11 +212,12 @@ async def delete_product(
 
 @router.get("/site-content")
 async def get_site_content_admin(
-    db: AsyncIOMotorDatabase,
+    request: Request,
     current_admin: dict = Depends(get_current_admin)
 ):
     """Get all site content for editing"""
     try:
+        db = request.state.db
         content = await db.site_content.find().to_list(100)
         return {"content": content}
     except Exception as e:
@@ -221,11 +228,12 @@ async def get_site_content_admin(
 async def update_site_content(
     section: str,
     content_update: SiteContentUpdate,
-    db: AsyncIOMotorDatabase,
+    request: Request,
     current_admin: dict = Depends(get_current_admin)
 ):
     """Update site content section"""
     try:
+        db = request.state.db
         update_data = {'updated_at': datetime.utcnow()}
         
         if content_update.content_ar:
@@ -246,11 +254,12 @@ async def update_site_content(
 
 @router.get("/gallery")
 async def get_gallery_admin(
-    db: AsyncIOMotorDatabase,
+    request: Request,
     current_admin: dict = Depends(get_current_admin)
 ):
     """Get all gallery images"""
     try:
+        db = request.state.db
         images = await db.gallery.find().sort('order', 1).to_list(100)
         return {"images": images}
     except Exception as e:
@@ -260,11 +269,12 @@ async def get_gallery_admin(
 @router.post("/gallery")
 async def add_gallery_image(
     image: GalleryImageCreate,
-    db: AsyncIOMotorDatabase,
+    request: Request,
     current_admin: dict = Depends(get_current_admin)
 ):
     """Add new gallery image"""
     try:
+        db = request.state.db
         from models.models import GalleryImage
         gallery_image = GalleryImage(**image.dict())
         image_dict = gallery_image.dict()
@@ -280,11 +290,12 @@ async def add_gallery_image(
 @router.delete("/gallery/{image_id}")
 async def delete_gallery_image(
     image_id: str,
-    db: AsyncIOMotorDatabase,
+    request: Request,
     current_admin: dict = Depends(get_current_admin)
 ):
     """Delete gallery image"""
     try:
+        db = request.state.db
         result = await db.gallery.delete_one({'id': image_id})
         
         if result.deleted_count == 0:
