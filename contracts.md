@@ -6,8 +6,8 @@ Building a complete e-commerce backend with shopping cart, OTP verification via 
 ## WhatsApp API Integration
 - **Provider**: TextMeBot API
 - **Base URL**: http://api.textmebot.com/send.php
-- **API Key**: akcfvdN9YTRL
-- **Admin Phone**: +96895555386
+- **API Key**: XXX
+- **Admin Phone**: +9689XXXXXXX
 
 ### API Usage:
 ```
