@@ -287,6 +287,34 @@ const Content = () => {
                         placeholder="أنا أحمد، طالب في الصف الخامس..."
                       />
                     </div>
+
+                    <div className="mt-6">
+                      <label className="block text-sm font-medium mb-3">البطاقات الإحصائية</label>
+                      <div className="space-y-3">
+                        {[0, 1, 2].map((index) => (
+                          <div key={index} className="grid grid-cols-2 gap-2 p-3 bg-amber-50 rounded-lg">
+                            <Input
+                              value={content.story?.ar?.stats?.[index]?.number || ''}
+                              onChange={(e) => {
+                                const stats = content.story?.ar?.stats || [{}, {}, {}];
+                                stats[index] = { ...stats[index], number: e.target.value };
+                                updateContent('story', 'ar', 'stats', stats);
+                              }}
+                              placeholder="50+"
+                            />
+                            <Input
+                              value={content.story?.ar?.stats?.[index]?.label || ''}
+                              onChange={(e) => {
+                                const stats = content.story?.ar?.stats || [{}, {}, {}];
+                                stats[index] = { ...stats[index], label: e.target.value };
+                                updateContent('story', 'ar', 'stats', stats);
+                              }}
+                              placeholder="خلية نحل نشطة"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   {/* English */}
