@@ -13,6 +13,7 @@ import Orders from './pages/admin/Orders';
 import Products from './pages/admin/Products';
 import Gallery from './pages/admin/Gallery';
 import Content from './pages/admin/Content';
+import Settings from './pages/admin/Settings';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
