@@ -88,7 +88,7 @@ async def create_order(order_data: OrderCreate, request: Request):
         await db.otp_codes.insert_one(otp_entry)
         
         # Send OTP via WhatsApp
-        result = send_otp_message(phone, order_data.customer_name, otp_code)
+        result = await send_otp_message(phone, order_data.customer_name, otp_code)
         
         if not result['success']:
             logger.error(f"Failed to send OTP: {result.get('error')}")
