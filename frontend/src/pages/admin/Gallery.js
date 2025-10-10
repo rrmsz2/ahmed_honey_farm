@@ -17,6 +17,8 @@ const Gallery = () => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingImageId, setEditingImageId] = useState(null);
   const [newImage, setNewImage] = useState({
     url: '',
     caption_ar: '',
