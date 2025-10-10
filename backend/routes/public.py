@@ -55,6 +55,7 @@ async def create_order(order_data: OrderCreate, request: Request):
     Create new order and send OTP for verification
     """
     try:
+        db = request.state.db
         # Validate phone format
         phone = order_data.customer_phone
         if not phone.startswith('+968'):
