@@ -93,6 +93,7 @@ const Gallery = () => {
           </div>
         )}
           </>
+        )}
 
         {selectedImage && (
           <div 
