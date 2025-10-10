@@ -62,7 +62,7 @@ const Story = () => {
 
           <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 mb-12 transform hover:scale-[1.02] transition-transform duration-300">
             <p className="text-lg leading-relaxed text-gray-700">
-              {content.story.content}
+              {content.content}
             </p>
           </div>
 
