@@ -31,11 +31,35 @@ const Header = () => {
           </div>
 
           <nav className="hidden md:flex items-center space-x-8" style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}>
-            <button onClick={() => scrollToSection('home')} className="nav-link">{content.nav.home}</button>
-            <button onClick={() => scrollToSection('story')} className="nav-link">{content.nav.story}</button>
-            <button onClick={() => scrollToSection('products')} className="nav-link">{content.nav.products}</button>
-            <button onClick={() => scrollToSection('gallery')} className="nav-link">{content.nav.gallery}</button>
-            <button onClick={() => scrollToSection('contact')} className="nav-link">{content.nav.contact}</button>
+            <button onClick={() => scrollToSection('home')} className="nav-link">
+              {language === 'ar' ? 'الرئيسية' : 'Home'}
+            </button>
+            <button onClick={() => scrollToSection('story')} className="nav-link">
+              {language === 'ar' ? 'قصتنا' : 'Our Story'}
+            </button>
+            <button onClick={() => scrollToSection('products')} className="nav-link">
+              {language === 'ar' ? 'منتجاتنا' : 'Products'}
+            </button>
+            <button onClick={() => scrollToSection('gallery')} className="nav-link">
+              {language === 'ar' ? 'المعرض' : 'Gallery'}
+            </button>
+            <button onClick={() => scrollToSection('contact')} className="nav-link">
+              {language === 'ar' ? 'تواصل معنا' : 'Contact'}
+            </button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/checkout')}
+              className="relative flex items-center gap-2 hover:bg-amber-50 transition-colors"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                  {cartCount}
+                </span>
+              )}
+            </Button>
             
             <Button 
               variant="outline" 
