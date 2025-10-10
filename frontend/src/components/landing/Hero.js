@@ -65,15 +65,15 @@ const Hero = () => {
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-20">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="hero-title mb-6 animate-fade-in">
-            {content.hero.title}
+            {content.title}
           </h1>
           
           <p className="hero-subtitle mb-4 animate-fade-in-delay-1">
-            {content.hero.subtitle}
+            {content.subtitle}
           </p>
           
           <p className="hero-description mb-10 animate-fade-in-delay-2">
-            {content.hero.description}
+            {content.description}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-delay-3">
