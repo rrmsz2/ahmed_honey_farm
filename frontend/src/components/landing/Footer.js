@@ -44,7 +44,7 @@ const Footer = () => {
               {language === 'ar' ? 'عسل أحمد' : "Ahmad's Honey"}
             </div>
             <p className="text-gray-400 flex items-center justify-center gap-2">
-              {content.footer.tagline}
+              {content.tagline}
               <Heart className="w-4 h-4 text-red-500 animate-pulse" />
             </p>
           </div>
