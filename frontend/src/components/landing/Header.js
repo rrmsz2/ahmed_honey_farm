@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { Menu, X, Globe } from 'lucide-react';
+import { Menu, X, Globe, ShoppingCart } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useLanguage } from '../../context/LanguageContext';
-import { siteContent } from '../../data/mock';
+import { useCart } from '../../context/CartContext';
+import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { language, toggleLanguage } = useLanguage();
-  const content = siteContent[language];
+  const { getCartItemsCount, setIsCartOpen } = useCart();
+  const navigate = useNavigate();
+  const cartCount = getCartItemsCount();
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
