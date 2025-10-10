@@ -83,8 +83,10 @@ def send_whatsapp_message(recipient: str, text: str, file_url: str = None, api_k
         return {'success': False, 'error': str(e)}
 
 
-def send_otp_message(recipient: str, name: str, otp: str) -> dict:
+async def send_otp_message(recipient: str, name: str, otp: str) -> dict:
     """Send OTP verification message"""
+    settings = await get_whatsapp_settings()
+    
     message = f"""مرحباً {name}! 👋
 
 رمز التحقق الخاص بك: *{otp}*
@@ -93,7 +95,7 @@ def send_otp_message(recipient: str, name: str, otp: str) -> dict:
 
 منحل أحمد 🍯"""
     
-    return send_whatsapp_message(recipient, message)
+    return send_whatsapp_message(recipient, message, api_key=settings['api_key'])
 
 
 def send_order_confirmation(recipient: str, name: str, order_details: dict) -> dict:
