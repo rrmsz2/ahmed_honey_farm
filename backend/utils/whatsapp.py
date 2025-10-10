@@ -2,14 +2,44 @@ import requests
 import urllib.parse
 import logging
 import time
+from motor.motor_asyncio import AsyncIOMotorClient
+import os
 
 logger = logging.getLogger(__name__)
 
 WHATSAPP_API_URL = "http://api.textmebot.com/send.php"
-WHATSAPP_API_KEY = "akcfvdN9YTRL"
-ADMIN_PHONE = "+96895555386"
 
-def send_whatsapp_message(recipient: str, text: str, file_url: str = None) -> dict:
+# Default settings (will be overridden by DB settings if available)
+DEFAULT_WHATSAPP_API_KEY = "akcfvdN9YTRL"
+DEFAULT_ADMIN_PHONE = "+96895555386"
+
+async def get_whatsapp_settings():
+    """Get WhatsApp settings from database"""
+    try:
+        mongo_url = os.environ.get('MONGO_URL')
+        client = AsyncIOMotorClient(mongo_url)
+        db = client[os.environ.get('DB_NAME')]
+        
+        settings = await db.settings.find_one({'type': 'whatsapp'})
+        
+        if settings:
+            return {
+                'api_key': settings.get('api_key', DEFAULT_WHATSAPP_API_KEY),
+                'admin_phone': settings.get('admin_phone', DEFAULT_ADMIN_PHONE)
+            }
+        
+        return {
+            'api_key': DEFAULT_WHATSAPP_API_KEY,
+            'admin_phone': DEFAULT_ADMIN_PHONE
+        }
+    except Exception as e:
+        logger.error(f"Error getting WhatsApp settings: {str(e)}")
+        return {
+            'api_key': DEFAULT_WHATSAPP_API_KEY,
+            'admin_phone': DEFAULT_ADMIN_PHONE
+        }
+
+def send_whatsapp_message(recipient: str, text: str, file_url: str = None, api_key: str = None) -> dict:
     """
     Send WhatsApp message using TextMeBot API
     
