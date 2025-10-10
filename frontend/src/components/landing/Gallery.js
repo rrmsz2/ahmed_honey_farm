@@ -36,12 +36,25 @@ const Gallery = () => {
     <section id="gallery" className="py-24 bg-gradient-to-b from-white to-amber-50" style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="section-title mb-4">{content.gallery.title}</h2>
-          <p className="section-subtitle">{content.gallery.subtitle}</p>
+          <h2 className="section-title mb-4">
+            {language === 'ar' ? 'معرض الصور' : 'Gallery'}
+          </h2>
+          <p className="section-subtitle">
+            {language === 'ar' ? 'استكشف مجموعة من الصور الجميلة' : 'Explore our beautiful collection of images'}
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-          {galleryImages.map((image, index) => (
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+            <p className="mt-4 text-gray-600">
+              {language === 'ar' ? 'جاري التحميل...' : 'Loading...'}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+              {displayedImages.map((image, index) => (
             <div 
               key={index}
               className="gallery-item group cursor-pointer"
