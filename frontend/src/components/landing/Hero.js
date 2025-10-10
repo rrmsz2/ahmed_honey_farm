@@ -1,12 +1,46 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowDown } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useLanguage } from '../../context/LanguageContext';
-import { siteContent, heroImage } from '../../data/mock';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+const heroImage = 'https://images.unsplash.com/photo-1590334280735-e8121293dbf6';
 
 const Hero = () => {
   const { language } = useLanguage();
-  const content = siteContent[language];
+  const [content, setContent] = useState({
+    title: '',
+    subtitle: '',
+    description: '',
+    cta: '',
+    learnMore: ''
+  });
+
+  useEffect(() => {
+    fetchContent();
+  }, [language]);
+
+  const fetchContent = async () => {
+    try {
+      const response = await axios.get(`${API}/site-content`);
+      const heroContent = response.data.content.hero;
+      if (heroContent) {
+        setContent(heroContent[language] || {});
+      }
+    } catch (error) {
+      console.error('Error fetching hero content:', error);
+      // Fallback content
+      setContent({
+        title: language === 'ar' ? 'عسل أحمد الطبيعي' : "Ahmad's Natural Honey",
+        subtitle: language === 'ar' ? 'رحلة طالب في الصف الخامس نحو عالم النحل' : "A 5th Grader's Journey",
+        description: language === 'ar' ? 'من مدرسة زيد بن ثابت الابتدائية إلى منحل حقيقي' : 'From school to a real apiary',
+        cta: language === 'ar' ? 'اطلب الآن' : 'Order Now',
+        learnMore: language === 'ar' ? 'اعرف قصتي' : 'Learn My Story'
+      });
+    }
+  };
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
