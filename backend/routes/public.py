@@ -43,7 +43,7 @@ async def get_gallery(request: Request):
     """Get gallery images"""
     try:
         db = request.state.db
-        images = await db.gallery.find().sort("order", 1).to_list(100)
+        images = await db.gallery.find({}, {"_id": 0}).sort("order", 1).to_list(100)
         return {"images": images}
     except Exception as e:
         logger.error(f"Error fetching gallery: {str(e)}")
