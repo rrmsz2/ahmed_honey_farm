@@ -220,7 +220,7 @@ async def resend_otp(order_id: str, request: Request):
         await db.otp_codes.insert_one(otp_entry)
         
         # Send OTP via WhatsApp
-        send_otp_message(order['customer_phone'], order['customer_name'], otp_code)
+        await send_otp_message(order['customer_phone'], order['customer_name'], otp_code)
         
         return {
             "success": True,
