@@ -63,6 +63,7 @@ function App() {
           <Toaster />
         </div>
       </LanguageProvider>
+      </CartProvider>
     </AuthProvider>
   );
 }
