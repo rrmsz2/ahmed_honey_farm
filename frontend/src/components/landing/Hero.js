@@ -82,7 +82,7 @@ const Hero = () => {
               onClick={() => scrollToSection('contact')}
               className="cta-button group"
             >
-              {content.hero.cta}
+              {content.cta}
               <span className="ml-2 group-hover:translate-x-1 transition-transform inline-block">→</span>
             </Button>
             
