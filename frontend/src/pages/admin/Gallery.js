@@ -184,15 +184,26 @@ const Gallery = () => {
                     <p className="font-medium text-left" dir="ltr">{image.caption_en}</p>
                   </div>
                   
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeleteImage(image.id)}
-                    className="w-full"
-                  >
-                    <Trash2 className="w-4 h-4 ml-2" />
-                    حذف
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditImage(image)}
+                      className="flex-1"
+                    >
+                      <Edit className="w-4 h-4 ml-2" />
+                      تعديل
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteImage(image.id)}
+                      className="flex-1"
+                    >
+                      <Trash2 className="w-4 h-4 ml-2" />
+                      حذف
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
