@@ -94,21 +94,6 @@ const Gallery = () => {
         )}
           </>
 
-        {images.length > 10 && (
-          <div className="text-center mt-12">
-            <Button
-              onClick={() => setShowAll(!showAll)}
-              className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
-            >
-              {showAll 
-                ? (language === 'ar' ? 'عرض أقل' : 'Show Less')
-                : (language === 'ar' ? 'عرض المزيد' : 'Show More')
-              }
-            </Button>
-          </div>
-        )}
-          </>
-
         {selectedImage && (
           <div 
             className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 animate-fade-in"
