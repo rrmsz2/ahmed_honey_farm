@@ -40,6 +40,22 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
+              <Route 
+                path="/admin/orders" 
+                element={
+                  <ProtectedRoute>
+                    <Orders />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/products" 
+                element={
+                  <ProtectedRoute>
+                    <Products />
+                  </ProtectedRoute>
+                } 
+              />
             </Routes>
           </BrowserRouter>
           <Toaster />
