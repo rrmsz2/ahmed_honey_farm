@@ -288,6 +288,33 @@ async def add_gallery_image(
         logger.error(f"Error adding gallery image: {str(e)}")
         raise HTTPException(status_code=500, detail="Error adding gallery image")
 
+@router.put("/gallery/{image_id}")
+async def update_gallery_image(
+    image_id: str,
+    image_update: GalleryImageCreate,
+    request: Request,
+    current_admin: dict = Depends(get_current_admin)
+):
+    """Update gallery image"""
+    try:
+        db = request.state.db
+        update_data = image_update.dict()
+        
+        result = await db.gallery.update_one(
+            {'id': image_id},
+            {'$set': update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Image not found")
+        
+        return {"success": True, "message": "Image updated successfully"}
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Error updating gallery image: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error updating gallery image")
+
 @router.delete("/gallery/{image_id}")
 async def delete_gallery_image(
     image_id: str,
