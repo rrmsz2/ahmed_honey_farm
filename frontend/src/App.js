@@ -27,11 +27,12 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <LanguageProvider>
-        <div className="App">
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Landing />} />
+      <CartProvider>
+        <LanguageProvider>
+          <div className="App">
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Landing />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route 
                 path="/admin/dashboard" 
