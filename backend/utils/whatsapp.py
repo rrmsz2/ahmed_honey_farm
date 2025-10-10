@@ -98,8 +98,9 @@ async def send_otp_message(recipient: str, name: str, otp: str) -> dict:
     return send_whatsapp_message(recipient, message, api_key=settings['api_key'])
 
 
-def send_order_confirmation(recipient: str, name: str, order_details: dict) -> dict:
+async def send_order_confirmation(recipient: str, name: str, order_details: dict) -> dict:
     """Send order confirmation to customer"""
+    settings = await get_whatsapp_settings()
     
     # Format product list
     products_text = "\n".join([
@@ -118,9 +119,9 @@ def send_order_confirmation(recipient: str, name: str, order_details: dict) -> d
 سنتواصل معك قريباً لتأكيد التوصيل والدفع 🚚
 
 منحل أحمد 🍯
-+968 9555 5386"""
+{settings['admin_phone']}"""
     
-    return send_whatsapp_message(recipient, message)
+    return send_whatsapp_message(recipient, message, api_key=settings['api_key'])
 
 
 def send_admin_notification(order_details: dict) -> dict:
