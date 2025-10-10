@@ -103,6 +103,23 @@
   box-shadow: 0 6px 25px rgba(245, 158, 11, 0.4);
 }
 
+.whatsapp-button {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: white;
+  font-weight: 700;
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+  border: none;
+}
+
+.whatsapp-button:hover {
+  background: linear-gradient(135deg, #128C7E 0%, #075E54 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 30px rgba(37, 211, 102, 0.5);
+  color: white;
+}
+
 .stat-card {
   background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
   border-radius: 1rem;
