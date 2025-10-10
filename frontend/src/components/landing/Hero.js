@@ -92,7 +92,7 @@ const Hero = () => {
               onClick={() => scrollToSection('story')}
               className="border-white text-white hover:bg-white hover:text-gray-900 transition-all"
             >
-              {content.hero.learnMore}
+              {content.learnMore}
             </Button>
           </div>
 
