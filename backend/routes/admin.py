@@ -36,7 +36,7 @@ async def admin_login(credentials: AdminLogin, request: Request):
 
 @router.get("/orders")
 async def get_all_orders(
-    db: AsyncIOMotorDatabase,
+    request: Request,
     current_admin: dict = Depends(get_current_admin),
     status: str = None,
     limit: int = 50,
@@ -44,6 +44,7 @@ async def get_all_orders(
 ):
     """Get all orders with optional filtering"""
     try:
+        db = request.state.db
         query = {}
         if status:
             query['status'] = status
