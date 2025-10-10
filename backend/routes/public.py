@@ -112,6 +112,7 @@ async def verify_otp(verification: OTPVerification, request: Request):
     Verify OTP and confirm order
     """
     try:
+        db = request.state.db
         # Find OTP entry
         otp_entry = await db.otp_codes.find_one({
             'order_id': verification.order_id,
