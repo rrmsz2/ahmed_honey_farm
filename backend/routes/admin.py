@@ -49,7 +49,7 @@ async def get_all_orders(
         if status:
             query['status'] = status
         
-        orders = await db.orders.find(query).sort('created_at', -1).skip(skip).limit(limit).to_list(limit)
+        orders = await db.orders.find(query, {"_id": 0}).sort('created_at', -1).skip(skip).limit(limit).to_list(limit)
         total = await db.orders.count_documents(query)
         
         return {
