@@ -107,7 +107,7 @@ async def create_order(order_data: OrderCreate, request: Request):
         raise HTTPException(status_code=500, detail="Error creating order")
 
 @router.post("/orders/verify-otp")
-async def verify_otp(verification: OTPVerification, db: AsyncIOMotorDatabase):
+async def verify_otp(verification: OTPVerification, request: Request):
     """
     Verify OTP and confirm order
     """
