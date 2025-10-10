@@ -1,51 +1,25 @@
-import React, { useState } from 'react';
-import { Mail, Phone, Send } from 'lucide-react';
+import React from 'react';
+import { MessageCircle, Phone, Clock } from 'lucide-react';
 import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Textarea } from '../ui/textarea';
 import { useLanguage } from '../../context/LanguageContext';
 import { siteContent } from '../../data/mock';
-import { useToast } from '../../hooks/use-toast';
 
 const Contact = () => {
   const { language } = useLanguage();
   const content = siteContent[language];
-  const { toast } = useToast();
   
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: ''
-  });
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    toast({
-      title: language === 'ar' ? 'تم إرسال الرسالة!' : 'Message Sent!',
-      description: language === 'ar' 
-        ? 'شكراً لتواصلك معنا. سنرد عليك قريباً.' 
-        : 'Thank you for contacting us. We will reply soon.',
-    });
-
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      message: ''
-    });
+  const whatsappNumber = '96895555386';
+  const whatsappMessage = language === 'ar' 
+    ? 'مرحباً، أرغب في الاستفسار عن منتجات عسل أحمد 🍯'
+    : 'Hello, I would like to inquire about Ahmad\'s honey products 🍯';
+  
+  const openWhatsApp = () => {
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+    window.open(url, '_blank');
   };
 
   return (
-    <section id="contact" className="py-24 bg-white" style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+    <section id="contact" className="py-24 bg-gradient-to-b from-white to-green-50" style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="section-title mb-4">{content.contact.title}</h2>
@@ -53,111 +27,74 @@ const Contact = () => {
         </div>
 
         <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div className="space-y-8">
-              <div className="flex items-start space-x-4 space-x-reverse">
-                <div className="flex-shrink-0 w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                  <Mail className="w-6 h-6 text-amber-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">
-                    {language === 'ar' ? 'البريد الإلكتروني' : 'Email'}
-                  </h3>
-                  <p className="text-gray-600">ahmad.honey@example.com</p>
-                </div>
+          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-green-500 to-green-600 p-8 text-center">
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-white rounded-full mb-6 animate-bounce">
+                <MessageCircle className="w-12 h-12 text-green-500" strokeWidth={2.5} />
               </div>
-
-              <div className="flex items-start space-x-4 space-x-reverse">
-                <div className="flex-shrink-0 w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                  <Phone className="w-6 h-6 text-amber-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">
-                    {language === 'ar' ? 'الهاتف' : 'Phone'}
-                  </h3>
-                  <p className="text-gray-600" style={{ direction: 'ltr' }}>+966 5X XXX XXXX</p>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-6 border border-amber-200">
-                <h3 className="font-bold text-xl mb-3 text-amber-900">
-                  {language === 'ar' ? 'ساعات العمل' : 'Business Hours'}
-                </h3>
-                <p className="text-gray-700 mb-2">
-                  {language === 'ar' ? 'السبت - الخميس: 3:00م - 8:00م' : 'Saturday - Thursday: 3:00 PM - 8:00 PM'}
-                </p>
-                <p className="text-gray-700">
-                  {language === 'ar' ? '(بعد المدرسة)' : '(After School)'}
-                </p>
-              </div>
+              <h3 className="text-3xl font-bold text-white mb-3">
+                {language === 'ar' ? 'تواصل معنا عبر واتساب' : 'Contact Us via WhatsApp'}
+              </h3>
+              <p className="text-green-50 text-lg mb-8">
+                {language === 'ar' 
+                  ? 'راسلنا الآن للاستفسار عن منتجاتنا وطلباتك' 
+                  : 'Message us now to inquire about our products and orders'}
+              </p>
+              
+              <Button 
+                onClick={openWhatsApp}
+                size="lg"
+                className="whatsapp-button text-xl px-12 py-6 h-auto"
+              >
+                <MessageCircle className="w-6 h-6 ml-3" />
+                {language === 'ar' ? 'راسلنا على واتساب' : 'Message on WhatsApp'}
+              </Button>
             </div>
 
-            <div className="bg-gradient-to-br from-gray-50 to-amber-50 rounded-2xl shadow-xl p-8">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    {content.contact.form.name}
-                  </label>
-                  <Input
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder={content.contact.form.namePlaceholder}
-                    required
-                    className="w-full"
-                  />
+            <div className="p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-start space-x-4 space-x-reverse p-6 bg-green-50 rounded-2xl border-2 border-green-100 hover:border-green-300 transition-all">
+                  <div className="flex-shrink-0 w-14 h-14 bg-green-500 rounded-xl flex items-center justify-center">
+                    <Phone className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg mb-2 text-gray-900">
+                      {language === 'ar' ? 'رقم الهاتف' : 'Phone Number'}
+                    </h3>
+                    <p className="text-gray-700 font-semibold text-lg" style={{ direction: 'ltr' }}>
+                      +968 9555 5386
+                    </p>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    {content.contact.form.email}
-                  </label>
-                  <Input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder={content.contact.form.emailPlaceholder}
-                    required
-                    className="w-full"
-                  />
+                <div className="flex items-start space-x-4 space-x-reverse p-6 bg-amber-50 rounded-2xl border-2 border-amber-100 hover:border-amber-300 transition-all">
+                  <div className="flex-shrink-0 w-14 h-14 bg-amber-500 rounded-xl flex items-center justify-center">
+                    <Clock className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg mb-2 text-gray-900">
+                      {language === 'ar' ? 'ساعات العمل' : 'Business Hours'}
+                    </h3>
+                    <p className="text-gray-700 font-medium">
+                      {language === 'ar' ? 'السبت - الخميس' : 'Saturday - Thursday'}
+                    </p>
+                    <p className="text-gray-600">
+                      {language === 'ar' ? '3:00م - 8:00م' : '3:00 PM - 8:00 PM'}
+                    </p>
+                    <p className="text-sm text-amber-600 mt-1">
+                      {language === 'ar' ? '(بعد المدرسة)' : '(After School)'}
+                    </p>
+                  </div>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    {content.contact.form.phone}
-                  </label>
-                  <Input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder={content.contact.form.phonePlaceholder}
-                    required
-                    className="w-full"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    {content.contact.form.message}
-                  </label>
-                  <Textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    placeholder={content.contact.form.messagePlaceholder}
-                    required
-                    rows={4}
-                    className="w-full"
-                  />
-                </div>
-
-                <Button type="submit" className="w-full cta-button group">
-                  <Send className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
-                  {content.contact.form.submit}
-                </Button>
-              </form>
+              <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border-2 border-green-200 text-center">
+                <p className="text-gray-700 text-lg">
+                  {language === 'ar' 
+                    ? '💬 نرد على جميع الرسائل خلال دقائق!' 
+                    : '💬 We reply to all messages within minutes!'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
