@@ -134,7 +134,7 @@ async def get_all_products(
     """Get all products (including unavailable)"""
     try:
         db = request.state.db
-        products = await db.products.find().to_list(100)
+        products = await db.products.find({}, {"_id": 0}).to_list(100)
         return {"products": products}
     except Exception as e:
         logger.error(f"Error fetching products: {str(e)}")
@@ -218,7 +218,7 @@ async def get_site_content_admin(
     """Get all site content for editing"""
     try:
         db = request.state.db
-        content = await db.site_content.find().to_list(100)
+        content = await db.site_content.find({}, {"_id": 0}).to_list(100)
         return {"content": content}
     except Exception as e:
         logger.error(f"Error fetching site content: {str(e)}")
@@ -260,7 +260,7 @@ async def get_gallery_admin(
     """Get all gallery images"""
     try:
         db = request.state.db
-        images = await db.gallery.find().sort('order', 1).to_list(100)
+        images = await db.gallery.find({}, {"_id": 0}).sort('order', 1).to_list(100)
         return {"images": images}
     except Exception as e:
         logger.error(f"Error fetching gallery: {str(e)}")
