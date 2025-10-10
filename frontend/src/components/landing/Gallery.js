@@ -108,12 +108,12 @@ const Gallery = () => {
             
             <div className="max-w-5xl max-h-[90vh] overflow-hidden">
               <img 
-                src={selectedImage.url}
-                alt={selectedImage.title || 'Gallery image'}
+                src={`${selectedImage.url}?w=1200&q=90`}
+                alt={language === 'ar' ? selectedImage.caption_ar : selectedImage.caption_en}
                 className="w-full h-full object-contain"
               />
               <p className="text-white text-center mt-4 text-lg">
-                {selectedImage.title || 'Gallery image'}
+                {language === 'ar' ? selectedImage.caption_ar : selectedImage.caption_en}
               </p>
             </div>
           </div>
