@@ -67,7 +67,7 @@ const Story = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {content.story.stats.map((stat, index) => (
+            {content.stats.map((stat, index) => (
               <div 
                 key={index}
                 className="stat-card group"
