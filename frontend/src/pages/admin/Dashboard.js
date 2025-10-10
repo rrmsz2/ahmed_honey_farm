@@ -97,7 +97,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100" dir="rtl">
       {/* Header */}
       <header className="bg-white shadow-md border-b">
         <div className="container mx-auto px-4 py-4">
