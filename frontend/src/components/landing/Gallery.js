@@ -1,12 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { Button } from '../ui/button';
 import { useLanguage } from '../../context/LanguageContext';
-import { siteContent, galleryImages } from '../../data/mock';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const Gallery = () => {
   const { language } = useLanguage();
-  const content = siteContent[language];
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    fetchGallery();
+  }, []);
+
+  const fetchGallery = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/gallery`);
+      setImages(response.data.images || []);
+    } catch (error) {
+      console.error('Error fetching gallery:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const displayedImages = showAll ? images : images.slice(0, 10);
 
   return (
     <section id="gallery" className="py-24 bg-gradient-to-b from-white to-amber-50" style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}>
