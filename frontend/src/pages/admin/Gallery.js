@@ -58,22 +58,47 @@ const Gallery = () => {
     }
 
     try {
-      await axios.post(`${API}/admin/gallery`, newImage);
-      toast({
-        title: 'تم الإضافة',
-        description: 'تم إضافة الصورة بنجاح',
-      });
+      if (isEditing) {
+        // Update existing image
+        await axios.put(`${API}/admin/gallery/${editingImageId}`, newImage);
+        toast({
+          title: 'تم التحديث',
+          description: 'تم تحديث الصورة بنجاح',
+        });
+      } else {
+        // Add new image
+        await axios.post(`${API}/admin/gallery`, newImage);
+        toast({
+          title: 'تم الإضافة',
+          description: 'تم إضافة الصورة بنجاح',
+        });
+      }
+      
       setIsDialogOpen(false);
+      setIsEditing(false);
+      setEditingImageId(null);
       setNewImage({ url: '', caption_ar: '', caption_en: '', order: 0 });
       fetchGallery();
     } catch (error) {
-      console.error('Error adding image:', error);
+      console.error('Error saving image:', error);
       toast({
         title: 'خطأ',
-        description: 'فشل في إضافة الصورة',
+        description: isEditing ? 'فشل في تحديث الصورة' : 'فشل في إضافة الصورة',
         variant: 'destructive',
       });
     }
+  };
+
+  const handleEditImage = (image) => {
+    setIsEditing(true);
+    setEditingImageId(image.id);
+    setNewImage({
+      url: image.url,
+      caption_ar: image.caption_ar,
+      caption_en: image.caption_en,
+      order: image.order
+    });
+    setIsDialogOpen(true);
   };
 
   const handleDeleteImage = async (imageId) => {
