@@ -277,9 +277,17 @@ const Gallery = () => {
             <div className="flex gap-3 pt-4">
               <Button onClick={handleAddImage} className="flex-1">
                 <Save className="w-4 h-4 ml-2" />
-                حفظ الصورة
+                {isEditing ? 'تحديث الصورة' : 'حفظ الصورة'}
               </Button>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  setIsEditing(false);
+                  setEditingImageId(null);
+                  setNewImage({ url: '', caption_ar: '', caption_en: '', order: 0 });
+                }}
+              >
                 إلغاء
               </Button>
             </div>
