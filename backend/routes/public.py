@@ -191,6 +191,7 @@ async def verify_otp(verification: OTPVerification, request: Request):
 async def resend_otp(order_id: str, request: Request):
     """Resend OTP for an order"""
     try:
+        db = request.state.db
         order = await db.orders.find_one({'id': order_id})
         if not order:
             raise HTTPException(status_code=404, detail="Order not found")
