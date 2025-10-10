@@ -1,22 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card';
 import { useLanguage } from '../../context/LanguageContext';
-import { siteContent, productImages } from '../../data/mock';
+import { useCart } from '../../context/CartContext';
 import { useToast } from '../../hooks/use-toast';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const Products = () => {
   const { language } = useLanguage();
-  const content = siteContent[language];
+  const { addToCart } = useCart();
   const { toast } = useToast();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleAddToCart = (productName) => {
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await axios.get(`${API}/products`);
+      setProducts(response.data.products);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddToCart = (product) => {
+    addToCart(product);
     toast({
       title: language === 'ar' ? 'تمت الإضافة للسلة' : 'Added to Cart',
       description: language === 'ar' 
-        ? `تم إضافة ${productName} للسلة بنجاح`
-        : `${productName} has been added to your cart`,
+        ? `تم إضافة ${product.name_ar} للسلة بنجاح`
+        : `${product.name_en} has been added to your cart`,
     });
   };
 
