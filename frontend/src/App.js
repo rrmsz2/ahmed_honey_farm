@@ -7,6 +7,8 @@ import { Toaster } from './components/ui/sonner';
 import Landing from './pages/Landing';
 import AdminLogin from './pages/admin/AdminLogin';
 import Dashboard from './pages/admin/Dashboard';
+import Orders from './pages/admin/Orders';
+import Products from './pages/admin/Products';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
