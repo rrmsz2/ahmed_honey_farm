@@ -125,6 +125,13 @@ const Products = () => {
               </Button>
               <h1 className="text-2xl font-bold text-gray-900">إدارة المنتجات</h1>
             </div>
+            <Button
+              onClick={handleAddNew}
+              className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600"
+            >
+              <Plus className="w-5 h-5" />
+              إضافة منتج جديد
+            </Button>
           </div>
         </div>
       </header>
