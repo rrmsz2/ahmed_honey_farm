@@ -5,46 +5,66 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { Card, CardContent } from '../../components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { useToast } from '../../hooks/use-toast';
-import api from '../../utils/axios';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Products = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingProduct, setEditingProduct] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
+  const getToken = () => {
+    return localStorage.getItem('token');
+  };
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching products...');
-      const response = await api.get('/admin/products');
-      console.log('✅ Products received:', response.data.products?.length || 0);
+      const token = getToken();
+      
+      if (!token) {
+        toast({
+          title: 'خطأ',
+          description: 'يجب تسجيل الدخول أولاً',
+          variant: 'destructive',
+        });
+        navigate('/admin/login');
+        return;
+      }
+
+      const response = await axios.get(`${BACKEND_URL}/api/admin/products`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log('✅ Products loaded:', response.data.products?.length || 0);
       setProducts(response.data.products || []);
     } catch (error) {
       console.error('❌ Error fetching products:', error);
-      console.error('Error response:', error.response?.data);
-      toast({
-        title: 'خطأ',
-        description: error.response?.data?.detail || 'فشل في تحميل المنتجات',
-        variant: 'destructive',
-      });
-      setProducts([]);
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        navigate('/admin/login');
+      } else {
+        toast({
+          title: 'خطأ',
+          description: 'فشل في تحميل المنتجات',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleEdit = (product) => {
-    setEditingProduct({...product});
-    setIsDialogOpen(true);
   };
 
   const handleAddNew = () => {
@@ -53,7 +73,7 @@ const Products = () => {
       name_en: '',
       description_ar: '',
       description_en: '',
-      price: 0,
+      price: '',
       weight: '',
       image_url: '',
       available: true
@@ -61,26 +81,78 @@ const Products = () => {
     setIsDialogOpen(true);
   };
 
+  const handleEdit = (product) => {
+    setEditingProduct({ ...product });
+    setIsDialogOpen(true);
+  };
+
   const handleSave = async () => {
     try {
+      setSaving(true);
+      const token = getToken();
+
+      if (!token) {
+        toast({
+          title: 'خطأ',
+          description: 'يجب تسجيل الدخول أولاً',
+          variant: 'destructive',
+        });
+        navigate('/admin/login');
+        return;
+      }
+
+      // Validate
+      if (!editingProduct.name_ar || !editingProduct.name_en || !editingProduct.price) {
+        toast({
+          title: 'خطأ',
+          description: 'الرجاء ملء جميع الحقول المطلوبة',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const productData = {
+        name_ar: editingProduct.name_ar,
+        name_en: editingProduct.name_en,
+        description_ar: editingProduct.description_ar || '',
+        description_en: editingProduct.description_en || '',
+        price: parseFloat(editingProduct.price),
+        weight: editingProduct.weight || '500g',
+        image_url: editingProduct.image_url || '',
+        available: editingProduct.available !== false
+      };
+
       if (editingProduct.id) {
-        // Update existing product
-        await api.put(`/admin/products/${editingProduct.id}`, editingProduct);
+        // Update
+        await axios.put(
+          `${BACKEND_URL}/api/admin/products/${editingProduct.id}`,
+          productData,
+          {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }
+        );
         toast({
           title: 'تم التحديث',
           description: 'تم تحديث المنتج بنجاح',
         });
       } else {
-        // Create new product
-        await api.post('/admin/products', editingProduct);
+        // Create
+        await axios.post(
+          `${BACKEND_URL}/api/admin/products`,
+          productData,
+          {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }
+        );
         toast({
           title: 'تمت الإضافة',
           description: 'تم إضافة المنتج بنجاح',
         });
       }
+
       setIsDialogOpen(false);
       setEditingProduct(null);
-      await fetchProducts(); // Reload products
+      await fetchProducts();
     } catch (error) {
       console.error('Error saving product:', error);
       toast({
@@ -88,6 +160,8 @@ const Products = () => {
         description: error.response?.data?.detail || 'فشل في حفظ المنتج',
         variant: 'destructive',
       });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -95,17 +169,22 @@ const Products = () => {
     if (!window.confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
 
     try {
-      await api.delete(`/admin/products/${productId}`);
+      const token = getToken();
+      await axios.delete(`${BACKEND_URL}/api/admin/products/${productId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
       toast({
         title: 'تم الحذف',
         description: 'تم حذف المنتج بنجاح',
       });
-      await fetchProducts(); // Reload products
+      
+      await fetchProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
       toast({
         title: 'خطأ',
-        description: error.response?.data?.detail || 'فشل في حذف المنتج',
+        description: 'فشل في حذف المنتج',
         variant: 'destructive',
       });
     }
@@ -139,8 +218,8 @@ const Products = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Products Grid */}
+      {/* Content */}
+      <main className="container mx-auto px-4 py-8">
         {loading ? (
           <div className="text-center py-12">
             <div className="text-xl text-gray-600">جاري التحميل...</div>
@@ -156,44 +235,46 @@ const Products = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => (
-              <Card key={product.id} className="overflow-hidden hover:shadow-xl transition-shadow">
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={`${product.image_url}?w=400&h=300&fit=crop`}
-                    alt={product.name_ar}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-medium ${
-                    product.available ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-                  }`}>
-                    {product.available ? 'متوفر' : 'غير متوفر'}
-                  </div>
+              <Card key={product.id} className="overflow-hidden">
+                <div className="aspect-video w-full overflow-hidden bg-gray-100">
+                  {product.image_url ? (
+                    <img
+                      src={product.image_url}
+                      alt={product.name_ar}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      لا توجد صورة
+                    </div>
+                  )}
                 </div>
-                
                 <CardContent className="p-4">
-                  <h3 className="text-lg font-bold mb-2">{product.name_ar}</h3>
-                  <p className="text-sm text-gray-600 mb-2 line-clamp-2">{product.description_ar}</p>
-                  <div className="flex items-center justify-between mt-4">
-                    <span className="text-xl font-bold text-amber-600">{product.price} ريال</span>
+                  <h3 className="font-bold text-lg mb-2">{product.name_ar}</h3>
+                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                    {product.description_ar}
+                  </p>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-2xl font-bold text-amber-600">
+                      {product.price} ر.ع
+                    </span>
                     <span className="text-sm text-gray-500">{product.weight}</span>
                   </div>
-                  
-                  <div className="flex gap-2 mt-4">
+                  <div className="flex gap-2">
                     <Button
-                      variant="outline"
-                      size="sm"
                       onClick={() => handleEdit(product)}
-                      className="flex-1"
+                      className="flex-1 bg-blue-500 hover:bg-blue-600"
                     >
-                      <Edit className="w-4 h-4 mr-2" />
+                      <Edit className="w-4 h-4 ml-2" />
                       تعديل
                     </Button>
                     <Button
-                      variant="destructive"
-                      size="sm"
                       onClick={() => handleDelete(product.id)}
+                      variant="destructive"
+                      className="flex-1"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4 ml-2" />
+                      حذف
                     </Button>
                   </div>
                 </CardContent>
@@ -201,102 +282,135 @@ const Products = () => {
             ))}
           </div>
         )}
-      </div>
+      </main>
 
-      {/* Edit/Add Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
-          <DialogHeader>
-            <DialogTitle>{editingProduct?.id ? 'تعديل المنتج' : 'إضافة منتج جديد'}</DialogTitle>
-          </DialogHeader>
-          
-          {editingProduct && (
-            <div className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">الاسم بالعربية</label>
-                  <Input
-                    value={editingProduct.name_ar}
-                    onChange={(e) => setEditingProduct({...editingProduct, name_ar: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">الاسم بالإنجليزية</label>
-                  <Input
-                    value={editingProduct.name_en}
-                    onChange={(e) => setEditingProduct({...editingProduct, name_en: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">الوصف بالعربية</label>
-                <Textarea
-                  value={editingProduct.description_ar}
-                  onChange={(e) => setEditingProduct({...editingProduct, description_ar: e.target.value})}
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">الوصف بالإنجليزية</label>
-                <Textarea
-                  value={editingProduct.description_en}
-                  onChange={(e) => setEditingProduct({...editingProduct, description_en: e.target.value})}
-                  rows={3}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">السعر (ريال)</label>
-                  <Input
-                    type="number"
-                    value={editingProduct.price}
-                    onChange={(e) => setEditingProduct({...editingProduct, price: parseFloat(e.target.value)})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">الوزن</label>
-                  <Input
-                    value={editingProduct.weight}
-                    onChange={(e) => setEditingProduct({...editingProduct, weight: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">رابط الصورة</label>
-                <Input
-                  value={editingProduct.image_url}
-                  onChange={(e) => setEditingProduct({...editingProduct, image_url: e.target.value})}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={editingProduct.available}
-                  onChange={(e) => setEditingProduct({...editingProduct, available: e.target.checked})}
-                  className="w-4 h-4"
-                />
-                <label className="text-sm font-medium">متوفر للبيع</label>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button onClick={handleSave} className="flex-1">
-                  <Save className="w-4 h-4 mr-2" />
-                  حفظ التغييرات
+      {/* Edit/Add Modal */}
+      {isDialogOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" dir="rtl">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">
+                  {editingProduct?.id ? 'تعديل المنتج' : 'إضافة منتج جديد'}
+                </h2>
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsDialogOpen(false)}
+                  className="p-2"
+                >
+                  <X className="w-5 h-5" />
                 </Button>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  <X className="w-4 h-4 mr-2" />
-                  إلغاء
-                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">الاسم بالعربية *</label>
+                  <Input
+                    value={editingProduct?.name_ar || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, name_ar: e.target.value })}
+                    placeholder="مثال: عسل السدر"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Name in English *</label>
+                  <Input
+                    value={editingProduct?.name_en || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, name_en: e.target.value })}
+                    placeholder="Example: Sidr Honey"
+                    dir="ltr"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">الوصف بالعربية</label>
+                  <Textarea
+                    value={editingProduct?.description_ar || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, description_ar: e.target.value })}
+                    placeholder="وصف المنتج بالعربية"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Description in English</label>
+                  <Textarea
+                    value={editingProduct?.description_en || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, description_en: e.target.value })}
+                    placeholder="Product description in English"
+                    rows={3}
+                    dir="ltr"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">السعر (ريال) *</label>
+                    <Input
+                      type="number"
+                      value={editingProduct?.price || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value })}
+                      placeholder="35"
+                      min="0"
+                      step="0.5"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">الوزن</label>
+                    <Input
+                      value={editingProduct?.weight || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, weight: e.target.value })}
+                      placeholder="500g"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">رابط الصورة</label>
+                  <Input
+                    value={editingProduct?.image_url || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })}
+                    placeholder="https://images.unsplash.com/..."
+                    dir="ltr"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="available"
+                    checked={editingProduct?.available !== false}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, available: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="available" className="text-sm font-medium">
+                    متوفر للبيع
+                  </label>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex-1 bg-amber-500 hover:bg-amber-600"
+                  >
+                    <Save className="w-4 h-4 ml-2" />
+                    {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+                  </Button>
+                  <Button
+                    onClick={() => setIsDialogOpen(false)}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    إلغاء
+                  </Button>
+                </div>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
