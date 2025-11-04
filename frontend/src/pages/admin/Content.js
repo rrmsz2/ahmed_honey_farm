@@ -77,13 +77,9 @@ const Content = () => {
   const handleSaveSection = async (section) => {
     setSaving(true);
     try {
-      await axios.put(`${API}/admin/site-content/${section}`, {
+      await api.put(`/admin/site-content/${section}`, {
         content_ar: content[section]?.ar || {},
         content_en: content[section]?.en || {}
-      }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
       });
       
       toast({
