@@ -1,0 +1,38 @@
+# Node modules
+frontend/node_modules
+frontend/build
+frontend/.env.local
+
+# Python
+backend/__pycache__
+backend/*.pyc
+backend/.pytest_cache
+backend/.mypy_cache
+backend/venv
+backend/.env.local
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+test_result.md
+tests/
+
+# Documentation
+README.md
+contracts.md
