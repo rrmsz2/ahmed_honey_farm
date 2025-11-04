@@ -192,11 +192,11 @@ const Products = () => {
         )}
       </div>
 
-      {/* Edit Dialog */}
+      {/* Edit/Add Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
-            <DialogTitle>تعديل المنتج</DialogTitle>
+            <DialogTitle>{editingProduct?.id ? 'تعديل المنتج' : 'إضافة منتج جديد'}</DialogTitle>
           </DialogHeader>
           
           {editingProduct && (
