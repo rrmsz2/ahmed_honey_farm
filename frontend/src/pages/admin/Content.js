@@ -28,11 +28,7 @@ const Content = () => {
   const fetchContent = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/admin/site-content`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await api.get('/admin/site-content');
       const contentData = response.data.content;
       
       // Default content structure
