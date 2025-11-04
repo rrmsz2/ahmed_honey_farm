@@ -24,7 +24,8 @@ const Products = () => {
   }, []);
 
   const getToken = () => {
-    return localStorage.getItem('token');
+    // Try both token names for compatibility
+    return localStorage.getItem('admin_token') || localStorage.getItem('token');
   };
 
   const fetchProducts = async () => {
