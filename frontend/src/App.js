@@ -19,10 +19,16 @@ import Settings from './pages/admin/Settings';
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
+  console.log('🛡️ ProtectedRoute check:', { isAuthenticated, loading });
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
       <div className="text-xl">جاري التحميل...</div>
     </div>;
+  }
+
+  if (!isAuthenticated) {
+    console.log('❌ Not authenticated, redirecting to login');
   }
 
   return isAuthenticated ? children : <Navigate to="/admin/login" />;
