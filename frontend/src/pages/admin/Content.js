@@ -87,6 +87,10 @@ const Content = () => {
       await axios.put(`${API}/admin/site-content/${section}`, {
         content_ar: content[section]?.ar || {},
         content_en: content[section]?.en || {}
+      }, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
       
       toast({
