@@ -23,10 +23,12 @@ const Products = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(`${API}/products`);
-      setProducts(response.data.products);
+      // Add cache busting parameter
+      const response = await axios.get(`${API}/products?t=${Date.now()}`);
+      setProducts(response.data.products || []);
     } catch (error) {
       console.error('Error fetching products:', error);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
