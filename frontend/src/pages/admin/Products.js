@@ -48,7 +48,7 @@ const Products = () => {
     try {
       if (editingProduct.id) {
         // Update existing product
-        await axios.put(`${API}/admin/products/${editingProduct.id}`, editingProduct);
+        await api.put(`/admin/products/${editingProduct.id}`, editingProduct);
         toast({
           title: 'تم التحديث',
           description: 'تم تحديث المنتج بنجاح',
@@ -56,12 +56,12 @@ const Products = () => {
       }
       setIsDialogOpen(false);
       setEditingProduct(null);
-      fetchProducts();
+      await fetchProducts(); // Reload products
     } catch (error) {
       console.error('Error saving product:', error);
       toast({
         title: 'خطأ',
-        description: 'فشل في حفظ المنتج',
+        description: error.response?.data?.detail || 'فشل في حفظ المنتج',
         variant: 'destructive',
       });
     }
