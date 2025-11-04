@@ -99,3 +99,85 @@ const response = await api.get('/admin/...');
 ---
 
 **تم الإصلاح في:** $(date)
+
+---
+
+## Fix #2: إدارة المنتجات والتحديثات لا تنعكس على الموقع
+
+### 📋 المشكلة:
+1. صفحة إدارة المنتجات لا تعمل
+2. التعديلات من لوحة التحكم لا تنعكس على الموقع
+
+### 🔍 التشخيص:
+
+#### المشكلة 1: Authorization Headers
+صفحة Admin Products كانت تستخدم axios مباشرة بدون Authorization headers
+
+#### المشكلة 2: قاعدة البيانات فارغة
+لا توجد منتجات في قاعدة البيانات للعرض
+
+#### المشكلة 3: Cache
+المتصفح يحفظ cache للمنتجات القديمة
+
+### ✅ الحل:
+
+#### 1. تحديث صفحة Admin Products
+```javascript
+// استخدام axios instance مع auto-authentication
+import api from '../../utils/axios';
+
+const response = await api.get('/admin/products');
+await api.put(`/admin/products/${id}`, data);
+await api.delete(`/admin/products/${id}`);
+```
+
+#### 2. إضافة Cache Busting
+في صفحة Landing:
+```javascript
+// إضافة timestamp لمنع الـ cache
+const response = await axios.get(`${API}/products?t=${Date.now()}`);
+```
+
+#### 3. إنشاء Seed Script
+أنشأنا `/app/backend/seed_products.py` لإضافة منتجات تجريبية:
+- 6 منتجات متنوعة
+- صور من Unsplash
+- بيانات كاملة بالعربي والإنجليزي
+
+### 📁 الملفات المعدلة:
+1. `/app/frontend/src/pages/admin/Products.js`
+   - استخدام axios instance
+   - تحسين error handling
+   - إضافة await للـ reload
+
+2. `/app/frontend/src/components/landing/Products.js`
+   - إضافة cache busting
+   - تحسين error handling
+
+3. `/app/backend/seed_products.py` (جديد)
+   - سكريبت لإضافة منتجات تجريبية
+
+### 🎯 المنتجات المضافة:
+✅ عسل السدر الجبلي - 35 ريال
+✅ عسل السمر الملكي - 30 ريال
+✅ عسل الزهور البرية - 25 ريال
+✅ عسل السدر الفاخر (1kg) - 60 ريال
+✅ عسل الغابة المطيرة - 40 ريال
+✅ عسل المانجروف - 45 ريال
+
+### ✅ النتيجة:
+- ✅ صفحة إدارة المنتجات تعمل بنجاح
+- ✅ يمكن تعديل المنتجات
+- ✅ يمكن حذف المنتجات
+- ✅ التغييرات تنعكس فوراً على الموقع
+- ✅ المنتجات تظهر في الصفحة الرئيسية
+
+### 🔄 لإضافة منتجات جديدة في المستقبل:
+```bash
+cd /app/backend
+python3 seed_products.py
+```
+
+---
+
+**تم الإصلاح في:** $(date)
