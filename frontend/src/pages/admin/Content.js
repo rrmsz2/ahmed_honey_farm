@@ -31,17 +31,34 @@ const Content = () => {
   const fetchContent = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/admin/site-content`);
+      const response = await axios.get(`${API}/admin/site-content`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       const contentData = response.data.content;
       
+      // Default content structure
+      const defaultContent = {
+        hero: { ar: {}, en: {} },
+        story: { ar: {}, en: {} },
+        contact: { ar: {}, en: {} },
+        footer: { ar: {}, en: {} }
+      };
+      
       // Transform the data structure
-      const transformed = {};
-      contentData.forEach(item => {
-        transformed[item.section] = {
-          ar: item.content_ar || {},
-          en: item.content_en || {}
-        };
-      });
+      const transformed = { ...defaultContent };
+      
+      if (contentData && Array.isArray(contentData)) {
+        contentData.forEach(item => {
+          if (item && item.section) {
+            transformed[item.section] = {
+              ar: item.content_ar || {},
+              en: item.content_en || {}
+            };
+          }
+        });
+      }
       
       setContent(transformed);
     } catch (error) {
@@ -50,6 +67,14 @@ const Content = () => {
         title: 'خطأ',
         description: 'فشل في تحميل المحتوى',
         variant: 'destructive',
+      });
+      
+      // Set default content on error
+      setContent({
+        hero: { ar: {}, en: {} },
+        story: { ar: {}, en: {} },
+        contact: { ar: {}, en: {} },
+        footer: { ar: {}, en: {} }
       });
     } finally {
       setLoading(false);
