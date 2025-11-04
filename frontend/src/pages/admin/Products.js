@@ -24,13 +24,16 @@ const Products = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Fetching products...');
       const response = await api.get('/admin/products');
+      console.log('✅ Products received:', response.data.products?.length || 0);
       setProducts(response.data.products || []);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error('❌ Error fetching products:', error);
+      console.error('Error response:', error.response?.data);
       toast({
         title: 'خطأ',
-        description: 'فشل في تحميل المنتجات',
+        description: error.response?.data?.detail || 'فشل في تحميل المنتجات',
         variant: 'destructive',
       });
       setProducts([]);
