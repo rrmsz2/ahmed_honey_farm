@@ -145,6 +145,14 @@ const Products = () => {
           <div className="text-center py-12">
             <div className="text-xl text-gray-600">جاري التحميل...</div>
           </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-xl text-gray-600 mb-4">لا توجد منتجات حالياً</div>
+            <Button onClick={handleAddNew} className="bg-amber-500 hover:bg-amber-600">
+              <Plus className="w-5 h-5 ml-2" />
+              إضافة منتج جديد
+            </Button>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => (
