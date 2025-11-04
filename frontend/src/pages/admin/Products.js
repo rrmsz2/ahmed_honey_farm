@@ -40,7 +40,21 @@ const Products = () => {
   };
 
   const handleEdit = (product) => {
-    setEditingProduct(product);
+    setEditingProduct({...product});
+    setIsDialogOpen(true);
+  };
+
+  const handleAddNew = () => {
+    setEditingProduct({
+      name_ar: '',
+      name_en: '',
+      description_ar: '',
+      description_en: '',
+      price: 0,
+      weight: '',
+      image_url: '',
+      available: true
+    });
     setIsDialogOpen(true);
   };
 
@@ -52,6 +66,13 @@ const Products = () => {
         toast({
           title: 'تم التحديث',
           description: 'تم تحديث المنتج بنجاح',
+        });
+      } else {
+        // Create new product
+        await api.post('/admin/products', editingProduct);
+        toast({
+          title: 'تمت الإضافة',
+          description: 'تم إضافة المنتج بنجاح',
         });
       }
       setIsDialogOpen(false);
