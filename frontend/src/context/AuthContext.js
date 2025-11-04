@@ -22,11 +22,15 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Check if token exists in localStorage
     const savedToken = localStorage.getItem('admin_token');
+    console.log('🔐 AuthContext: Checking token on mount...', savedToken ? 'Token found' : 'No token');
     if (savedToken) {
       setToken(savedToken);
       setIsAuthenticated(true);
       // Set default authorization header
       axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+      console.log('✅ AuthContext: User authenticated');
+    } else {
+      console.log('❌ AuthContext: No token, user not authenticated');
     }
     setLoading(false);
   }, []);
