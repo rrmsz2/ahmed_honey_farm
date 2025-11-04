@@ -24,8 +24,8 @@ const Products = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/admin/products`);
-      setProducts(response.data.products);
+      const response = await api.get('/admin/products');
+      setProducts(response.data.products || []);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast({
@@ -33,6 +33,7 @@ const Products = () => {
         description: 'فشل في تحميل المنتجات',
         variant: 'destructive',
       });
+      setProducts([]);
     } finally {
       setLoading(false);
     }
