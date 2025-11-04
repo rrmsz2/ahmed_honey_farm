@@ -71,17 +71,17 @@ const Products = () => {
     if (!window.confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
 
     try {
-      await axios.delete(`${API}/admin/products/${productId}`);
+      await api.delete(`/admin/products/${productId}`);
       toast({
         title: 'تم الحذف',
         description: 'تم حذف المنتج بنجاح',
       });
-      fetchProducts();
+      await fetchProducts(); // Reload products
     } catch (error) {
       console.error('Error deleting product:', error);
       toast({
         title: 'خطأ',
-        description: 'فشل في حذف المنتج',
+        description: error.response?.data?.detail || 'فشل في حذف المنتج',
         variant: 'destructive',
       });
     }
