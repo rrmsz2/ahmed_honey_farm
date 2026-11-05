@@ -1,105 +1,90 @@
-import React, { useState } from 'react';
-import { Menu, X, Globe, ShoppingCart } from 'lucide-react';
-import { Button } from '../ui/button';
-import { useLanguage } from '../../context/LanguageContext';
-import { useCart } from '../../context/CartContext';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Globe, Menu, ShoppingCart, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useCart } from '@/context/CartContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { scrollToSection } from '@/lib/format';
+
+const SECTIONS = ['home', 'story', 'products', 'gallery', 'contact'];
+
+const CartButton = ({ count, label, onClick }) => (
+  <Button variant="outline" size="sm" onClick={onClick} className="relative hover:bg-amber-50" aria-label={label}>
+    <ShoppingCart className="w-4 h-4" />
+    {count > 0 && (
+      <span className="absolute -top-2 -end-2 bg-amber-500 text-white text-xs rounded-full min-w-5 h-5 px-1 flex items-center justify-center font-bold">
+        {count}
+      </span>
+    )}
+  </Button>
+);
 
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { language, toggleLanguage } = useLanguage();
-  const { getCartItemsCount, setIsCartOpen } = useCart();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { t, toggleLanguage } = useLanguage();
+  const { count } = useCart();
   const navigate = useNavigate();
-  const cartCount = getCartItemsCount();
+  const { pathname } = useLocation();
 
-  const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setIsMenuOpen(false);
+  const goTo = (id) => {
+    setMenuOpen(false);
+    if (pathname !== '/') {
+      navigate('/', { state: { scrollTo: id } });
+    } else {
+      scrollToSection(id);
     }
   };
 
   return (
-    <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md shadow-sm z-50 transition-all">
+    <header className="fixed top-0 inset-x-0 bg-white/95 backdrop-blur-md shadow-sm z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          <div className="flex items-center space-x-3" style={{ direction: 'ltr' }}>
-            <div className="text-2xl font-bold bg-gradient-to-r from-amber-500 to-yellow-600 bg-clip-text text-transparent">
-              {language === 'ar' ? 'عسل أحمد' : "Ahmad's Honey"}
-            </div>
-          </div>
+          <Link
+            to="/"
+            className="text-2xl font-bold bg-gradient-to-r from-amber-500 to-yellow-600 bg-clip-text text-transparent"
+          >
+            🍯 {t.brand}
+          </Link>
 
-          <nav className="hidden md:flex items-center space-x-8" style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}>
-            <button onClick={() => scrollToSection('home')} className="nav-link">
-              {language === 'ar' ? 'الرئيسية' : 'Home'}
-            </button>
-            <button onClick={() => scrollToSection('story')} className="nav-link">
-              {language === 'ar' ? 'قصتنا' : 'Our Story'}
-            </button>
-            <button onClick={() => scrollToSection('products')} className="nav-link">
-              {language === 'ar' ? 'منتجاتنا' : 'Products'}
-            </button>
-            <button onClick={() => scrollToSection('gallery')} className="nav-link">
-              {language === 'ar' ? 'المعرض' : 'Gallery'}
-            </button>
-            <button onClick={() => scrollToSection('contact')} className="nav-link">
-              {language === 'ar' ? 'تواصل معنا' : 'Contact'}
-            </button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/checkout')}
-              className="relative flex items-center gap-2 hover:bg-amber-50 transition-colors"
-            >
-              <ShoppingCart className="w-4 h-4" />
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                  {cartCount}
-                </span>
-              )}
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={toggleLanguage}
-              className="flex items-center gap-2 hover:bg-amber-50 transition-colors"
-            >
+          <nav className="hidden md:flex items-center gap-8">
+            {SECTIONS.map((id) => (
+              <button key={id} type="button" onClick={() => goTo(id)} className="nav-link">
+                {t.nav[id]}
+              </button>
+            ))}
+            <CartButton count={count} label={t.cart} onClick={() => navigate('/checkout')} />
+            <Button variant="outline" size="sm" onClick={toggleLanguage} className="gap-2 hover:bg-amber-50">
               <Globe className="w-4 h-4" />
-              {language === 'ar' ? 'EN' : 'عربي'}
+              {t.switchLanguage}
             </Button>
           </nav>
 
-          <button 
-            className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          <div className="flex md:hidden items-center gap-2">
+            <CartButton count={count} label={t.cart} onClick={() => navigate('/checkout')} />
+            <button
+              type="button"
+              className="p-2 hover:bg-gray-100 rounded-lg"
+              onClick={() => setMenuOpen((open) => !open)}
+              aria-label="menu"
+              aria-expanded={menuOpen}
+            >
+              {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
 
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t" style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}>
-            <nav className="flex flex-col space-y-3">
-              <button onClick={() => scrollToSection('home')} className="nav-link-mobile">{content.nav.home}</button>
-              <button onClick={() => scrollToSection('story')} className="nav-link-mobile">{content.nav.story}</button>
-              <button onClick={() => scrollToSection('products')} className="nav-link-mobile">{content.nav.products}</button>
-              <button onClick={() => scrollToSection('gallery')} className="nav-link-mobile">{content.nav.gallery}</button>
-              <button onClick={() => scrollToSection('contact')} className="nav-link-mobile">{content.nav.contact}</button>
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={toggleLanguage}
-                className="flex items-center gap-2 justify-center"
-              >
-                <Globe className="w-4 h-4" />
-                {language === 'ar' ? 'English' : 'عربي'}
-              </Button>
-            </nav>
-          </div>
+        {menuOpen && (
+          <nav className="md:hidden py-4 border-t flex flex-col gap-1">
+            {SECTIONS.map((id) => (
+              <button key={id} type="button" onClick={() => goTo(id)} className="nav-link-mobile text-start">
+                {t.nav[id]}
+              </button>
+            ))}
+            <Button variant="outline" size="sm" onClick={toggleLanguage} className="gap-2 mt-2">
+              <Globe className="w-4 h-4" />
+              {t.switchLanguage}
+            </Button>
+          </nav>
         )}
       </div>
     </header>

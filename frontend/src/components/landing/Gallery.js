@@ -1,125 +1,83 @@
-import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import { Button } from '../ui/button';
-import { useLanguage } from '../../context/LanguageContext';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/context/LanguageContext';
+import { api } from '@/lib/api';
+import { imageUrl } from '@/lib/format';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const INITIAL_COUNT = 9;
 
 const Gallery = () => {
-  const { language } = useLanguage();
-  const [images, setImages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const { t, pick } = useLanguage();
+  const [images, setImages] = useState(null);
+  const [selected, setSelected] = useState(null);
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    fetchGallery();
+    api
+      .get('/gallery')
+      .then(({ data }) => setImages(data.images))
+      .catch(() => setImages([]));
   }, []);
 
-  const fetchGallery = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API}/gallery`);
-      setImages(response.data.images || []);
-    } catch (error) {
-      console.error('Error fetching gallery:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const displayedImages = showAll ? images : images.slice(0, 10);
+  if (images?.length === 0) return null;
+  const visible = showAll ? images : images?.slice(0, INITIAL_COUNT);
 
   return (
-    <section id="gallery" className="py-24 bg-gradient-to-b from-white to-amber-50" style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+    <section id="gallery" className="py-24 bg-gradient-to-b from-white to-amber-50 scroll-mt-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="section-title mb-4">
-            {language === 'ar' ? 'معرض الصور' : 'Gallery'}
-          </h2>
-          <p className="section-subtitle">
-            {language === 'ar' ? 'استكشف مجموعة من الصور الجميلة' : 'Explore our beautiful collection of images'}
-          </p>
+          <h2 className="section-title mb-4">{t.gallery.title}</h2>
+          <p className="section-subtitle">{t.gallery.subtitle}</p>
         </div>
 
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
-            <p className="mt-4 text-gray-600">
-              {language === 'ar' ? 'جاري التحميل...' : 'Loading...'}
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-              {displayedImages.map((image, index) => (
-            <div 
-              key={index}
-              className="gallery-item group cursor-pointer"
-              onClick={() => setSelectedImage(image)}
-              style={{ animationDelay: `${index * 0.05}s` }}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+          {images === null && [0, 1, 2].map((i) => <Skeleton key={i} className="aspect-square rounded-lg" />)}
+          {visible?.map((image) => (
+            <button
+              key={image.id}
+              type="button"
+              className="gallery-item group relative overflow-hidden rounded-lg shadow-lg aspect-square"
+              onClick={() => setSelected(image)}
             >
-              <div className="relative overflow-hidden rounded-lg shadow-lg aspect-square">
-                <img 
-                  src={`${image.url}?w=500&h=500&fit=crop&q=80`}
-                  alt={language === 'ar' ? image.caption_ar : image.caption_en}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                    <p className="text-sm font-medium">
-                      {language === 'ar' ? image.caption_ar : image.caption_en}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <img
+                src={imageUrl(image.url, { w: 600, h: 600 })}
+                alt={pick(image, 'caption')}
+                loading="lazy"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+              <span className="absolute inset-x-0 bottom-0 p-4 text-white text-sm font-medium bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                {pick(image, 'caption')}
+              </span>
+            </button>
           ))}
         </div>
 
-        {images.length > 10 && (
+        {images?.length > INITIAL_COUNT && (
           <div className="text-center mt-12">
-            <Button
-              onClick={() => setShowAll(!showAll)}
-              className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
-            >
-              {showAll 
-                ? (language === 'ar' ? 'عرض أقل' : 'Show Less')
-                : (language === 'ar' ? 'عرض المزيد' : 'Show More')
-              }
+            <Button onClick={() => setShowAll((v) => !v)} className="bg-amber-600 hover:bg-amber-700 text-white px-8">
+              {showAll ? t.gallery.less : t.gallery.more}
             </Button>
           </div>
         )}
-          </>
-        )}
-
-        {selectedImage && (
-          <div 
-            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 animate-fade-in"
-            onClick={() => setSelectedImage(null)}
-          >
-            <button 
-              className="absolute top-4 right-4 text-white hover:text-amber-400 transition-colors"
-              onClick={() => setSelectedImage(null)}
-            >
-              <X className="w-8 h-8" />
-            </button>
-            
-            <div className="max-w-5xl max-h-[90vh] overflow-hidden">
-              <img 
-                src={`${selectedImage.url}?w=1200&q=90`}
-                alt={language === 'ar' ? selectedImage.caption_ar : selectedImage.caption_en}
-                className="w-full h-full object-contain"
-              />
-              <p className="text-white text-center mt-4 text-lg">
-                {language === 'ar' ? selectedImage.caption_ar : selectedImage.caption_en}
-              </p>
-            </div>
-          </div>
-        )}
       </div>
+
+      <Dialog open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)}>
+        <DialogContent className="max-w-5xl bg-black/95 border-none p-4">
+          <DialogTitle className="sr-only">{selected && pick(selected, 'caption')}</DialogTitle>
+          {selected && (
+            <figure>
+              <img
+                src={imageUrl(selected.url, { w: 1600, q: 90 })}
+                alt={pick(selected, 'caption')}
+                className="w-full max-h-[80vh] object-contain"
+              />
+              <figcaption className="text-white text-center mt-4 text-lg">{pick(selected, 'caption')}</figcaption>
+            </figure>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

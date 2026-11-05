@@ -1,179 +1,170 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Save, Key, Phone } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
-import { useToast } from '../../hooks/use-toast';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { KeyRound, Lock, MessageCircle, Phone, Save, Send } from 'lucide-react';
+import { toast } from 'sonner';
+import AdminLayout, { Loading } from '@/components/admin/AdminLayout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/context/AuthContext';
+import { api, errorMessage } from '@/lib/api';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const WhatsAppSettings = () => {
+  const [settings, setSettings] = useState(null);
+  const [apiKey, setApiKey] = useState('');
+  const [phone, setPhone] = useState('');
+  const [busy, setBusy] = useState(false);
 
-const Settings = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState({
-    api_key: '',
-    admin_phone: ''
-  });
+  const load = () =>
+    api.get('/admin/settings/whatsapp').then(({ data }) => {
+      setSettings(data);
+      setPhone(data.admin_phone);
+    });
 
   useEffect(() => {
-    fetchSettings();
+    load().catch((error) => toast.error(errorMessage(error, 'فشل في تحميل الإعدادات')));
   }, []);
 
-  const fetchSettings = async () => {
+  const save = async (event) => {
+    event.preventDefault();
+    setBusy(true);
     try {
-      setLoading(true);
-      const response = await axios.get(`${API}/admin/settings/whatsapp`);
-      setSettings(response.data);
+      await api.put('/admin/settings/whatsapp', { admin_phone: phone, api_key: apiKey || null });
+      setApiKey('');
+      await load();
+      toast.success('تم حفظ إعدادات واتساب');
     } catch (error) {
-      console.error('Error fetching settings:', error);
-      toast({
-        title: 'خطأ',
-        description: 'فشل في تحميل الإعدادات',
-        variant: 'destructive',
-      });
+      toast.error(errorMessage(error, 'فشل في حفظ الإعدادات'));
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   };
 
-  const handleSave = async () => {
-    setSaving(true);
+  const test = async () => {
+    setBusy(true);
     try {
-      await axios.put(`${API}/admin/settings/whatsapp`, settings);
-      
-      toast({
-        title: 'تم الحفظ',
-        description: 'تم حفظ إعدادات واتساب بنجاح',
-      });
+      await api.post('/admin/settings/whatsapp/test');
+      toast.success('تم إرسال رسالة تجريبية إلى رقم المشرف');
     } catch (error) {
-      console.error('Error saving settings:', error);
-      toast({
-        title: 'خطأ',
-        description: 'فشل في حفظ الإعدادات',
-        variant: 'destructive',
-      });
+      toast.error(errorMessage(error));
     } finally {
-      setSaving(false);
+      setBusy(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center" dir="rtl">
-        <div className="text-xl text-gray-600">جاري التحميل...</div>
-      </div>
-    );
-  }
+  if (!settings) return <Loading />;
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/admin/dashboard')}
-              className="flex items-center gap-2"
-            >
-              <ArrowRight className="w-5 h-5" />
-              العودة
-            </Button>
-            <h1 className="text-2xl font-bold text-gray-900">الإعدادات</h1>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <MessageCircle className="w-5 h-5 text-green-600" />
+          إعدادات واتساب (TextMeBot)
+        </CardTitle>
+        <CardDescription>تُستخدم لإرسال رموز التحقق، وتأكيد الطلب للعميل، وإشعار المشرف بكل طلب جديد.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {settings.dry_run && (
+          <p className="mb-4 rounded-md bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800">
+            وضع التجربة مفعّل (WHATSAPP_DRY_RUN): الرسائل تُكتب في سجلات الخادم ولا تُرسل فعلياً.
+          </p>
+        )}
+        <form onSubmit={save} className="space-y-4">
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2"><KeyRound className="w-4 h-4" /> مفتاح API</Label>
+            <Input
+              type="password"
+              autoComplete="off"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder={settings.has_api_key ? `محفوظ: ${settings.api_key_masked} — اتركه فارغاً للإبقاء عليه` : 'أدخل مفتاح API'}
+              dir="ltr"
+              className="font-mono"
+            />
           </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Phone className="w-5 h-5 text-green-600" />
-              إعدادات واتساب
-            </CardTitle>
-            <CardDescription>
-              إدارة API Key ورقم الهاتف لإشعارات الطلبات
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p className="text-sm text-yellow-800">
-                <strong>ملاحظة:</strong> سيتم استخدام هذه الإعدادات لإرسال:
-              </p>
-              <ul className="list-disc list-inside text-sm text-yellow-700 mt-2 space-y-1">
-                <li>رموز التحقق (OTP) للعملاء</li>
-                <li>تأكيدات الطلبات للعملاء</li>
-                <li>إشعارات الطلبات الجديدة للمشرف</li>
-              </ul>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium mb-2">
-                  <Key className="w-4 h-4" />
-                  API Key
-                </label>
-                <Input
-                  value={settings.api_key}
-                  onChange={(e) => setSettings({...settings, api_key: e.target.value})}
-                  placeholder="akcfvdN9YTRL"
-                  dir="ltr"
-                  className="font-mono"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  API Key من TextMeBot أو الخدمة المستخدمة
-                </p>
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium mb-2">
-                  <Phone className="w-4 h-4" />
-                  رقم هاتف المشرف
-                </label>
-                <Input
-                  value={settings.admin_phone}
-                  onChange={(e) => setSettings({...settings, admin_phone: e.target.value})}
-                  placeholder="+96895555386"
-                  dir="ltr"
-                  className="font-mono"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  الرقم الذي سيستقبل إشعارات الطلبات الجديدة (يجب أن يبدأ بـ +968)
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
-                <strong>للحصول على API Key:</strong>
-              </p>
-              <ol className="list-decimal list-inside text-sm text-blue-700 mt-2 space-y-1">
-                <li>قم بزيارة موقع TextMeBot أو الخدمة المستخدمة</li>
-                <li>قم بالتسجيل وربط رقم واتساب</li>
-                <li>احصل على API Key من لوحة التحكم</li>
-                <li>الصق API Key هنا</li>
-              </ol>
-            </div>
-
-            <Button 
-              onClick={handleSave} 
-              disabled={saving}
-              className="w-full bg-green-600 hover:bg-green-700"
-            >
-              <Save className="w-4 h-4 ml-2" />
-              {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2"><Phone className="w-4 h-4" /> رقم المشرف (يستقبل إشعارات الطلبات)</Label>
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder="+9689XXXXXXX" dir="ltr" className="font-mono" />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" disabled={busy} className="gap-2 bg-green-600 hover:bg-green-700">
+              <Save className="w-4 h-4" />
+              حفظ
             </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+            <Button type="button" variant="outline" disabled={busy || !settings.admin_phone} onClick={test} className="gap-2">
+              <Send className="w-4 h-4" />
+              إرسال رسالة تجريبية
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
+
+const PasswordSettings = () => {
+  const { replaceToken } = useAuth();
+  const [form, setForm] = useState({ current: '', next: '', confirm: '' });
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (event) => {
+    event.preventDefault();
+    if (form.next !== form.confirm) {
+      toast.error('كلمتا المرور غير متطابقتين');
+      return;
+    }
+    setBusy(true);
+    try {
+      const { data } = await api.post('/admin/password', { current_password: form.current, new_password: form.next });
+      replaceToken(data.access_token);
+      setForm({ current: '', next: '', confirm: '' });
+      toast.success('تم تغيير كلمة المرور');
+    } catch (error) {
+      toast.error(errorMessage(error, 'فشل في تغيير كلمة المرور'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const set = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Lock className="w-5 h-5 text-amber-600" />
+          تغيير كلمة المرور
+        </CardTitle>
+        <CardDescription>10 أحرف على الأقل. ستنتهي جلسات الأجهزة الأخرى بعد التغيير.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={submit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>كلمة المرور الحالية</Label>
+            <Input type="password" autoComplete="current-password" value={form.current} onChange={set('current')} required />
+          </div>
+          <div className="space-y-2">
+            <Label>كلمة المرور الجديدة</Label>
+            <Input type="password" autoComplete="new-password" minLength={10} value={form.next} onChange={set('next')} required />
+          </div>
+          <div className="space-y-2">
+            <Label>تأكيد كلمة المرور الجديدة</Label>
+            <Input type="password" autoComplete="new-password" minLength={10} value={form.confirm} onChange={set('confirm')} required />
+          </div>
+          <Button type="submit" disabled={busy}>تغيير كلمة المرور</Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+};
+
+const Settings = () => (
+  <AdminLayout title="الإعدادات">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl">
+      <WhatsAppSettings />
+      <PasswordSettings />
+    </div>
+  </AdminLayout>
+);
 
 export default Settings;

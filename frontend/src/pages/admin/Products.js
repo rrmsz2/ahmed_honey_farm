@@ -1,266 +1,162 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Plus, Edit, Trash2, Save, X } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Textarea } from '../../components/ui/textarea';
-import { Card, CardContent } from '../../components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { useToast } from '../../hooks/use-toast';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { Edit, Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import AdminLayout, { Empty, Loading } from '@/components/admin/AdminLayout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { api, errorMessage } from '@/lib/api';
+import { formatMoney, imageUrl } from '@/lib/format';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const EMPTY = {
+  name_ar: '', name_en: '', description_ar: '', description_en: '',
+  price: '', weight: '', image_url: '', available: true, sort_order: 0,
+};
+const FIELDS = Object.keys(EMPTY);
+
+const Field = ({ label, children }) => (
+  <div className="space-y-2">
+    <Label>{label}</Label>
+    {children}
+  </div>
+);
 
 const Products = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [products, setProducts] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const load = () =>
+    api
+      .get('/admin/products')
+      .then(({ data }) => setProducts(data.products))
+      .catch((error) => {
+        toast.error(errorMessage(error, 'فشل في تحميل المنتجات'));
+        setProducts([]);
+      });
 
   useEffect(() => {
-    fetchProducts();
+    load();
   }, []);
 
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API}/admin/products`);
-      setProducts(response.data.products);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      toast({
-        title: 'خطأ',
-        description: 'فشل في تحميل المنتجات',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const set = (field) => (event) => setEditing((prev) => ({ ...prev, [field]: event.target.value }));
 
-  const handleEdit = (product) => {
-    setEditingProduct(product);
-    setIsDialogOpen(true);
-  };
-
-  const handleSave = async () => {
+  const save = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    const payload = Object.fromEntries(FIELDS.map((f) => [f, editing[f]]));
+    payload.price = Number(payload.price);
+    payload.sort_order = Number(payload.sort_order) || 0;
     try {
-      if (editingProduct.id) {
-        // Update existing product
-        await axios.put(`${API}/admin/products/${editingProduct.id}`, editingProduct);
-        toast({
-          title: 'تم التحديث',
-          description: 'تم تحديث المنتج بنجاح',
-        });
+      if (editing.id) {
+        await api.put(`/admin/products/${editing.id}`, payload);
+      } else {
+        await api.post('/admin/products', payload);
       }
-      setIsDialogOpen(false);
-      setEditingProduct(null);
-      fetchProducts();
+      toast.success('تم حفظ المنتج');
+      setEditing(null);
+      load();
     } catch (error) {
-      console.error('Error saving product:', error);
-      toast({
-        title: 'خطأ',
-        description: 'فشل في حفظ المنتج',
-        variant: 'destructive',
-      });
+      toast.error(errorMessage(error, 'فشل في حفظ المنتج'));
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleDelete = async (productId) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
-
+  const remove = async (product) => {
+    if (!window.confirm(`حذف "${product.name_ar}" نهائياً؟`)) return;
     try {
-      await axios.delete(`${API}/admin/products/${productId}`);
-      toast({
-        title: 'تم الحذف',
-        description: 'تم حذف المنتج بنجاح',
-      });
-      fetchProducts();
+      await api.delete(`/admin/products/${product.id}`);
+      toast.success('تم حذف المنتج');
+      load();
     } catch (error) {
-      console.error('Error deleting product:', error);
-      toast({
-        title: 'خطأ',
-        description: 'فشل في حذف المنتج',
-        variant: 'destructive',
-      });
+      toast.error(errorMessage(error, 'فشل في حذف المنتج'));
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                onClick={() => navigate('/admin/dashboard')}
-                className="flex items-center gap-2"
-              >
-                <ArrowRight className="w-5 h-5" />
-                العودة
-              </Button>
-              <h1 className="text-2xl font-bold text-gray-900">إدارة المنتجات</h1>
-            </div>
-          </div>
+    <AdminLayout
+      title="المنتجات"
+      actions={
+        <Button onClick={() => setEditing({ ...EMPTY })} className="gap-2 bg-green-600 hover:bg-green-700">
+          <Plus className="w-4 h-4" />
+          منتج جديد
+        </Button>
+      }
+    >
+      {products === null ? (
+        <Loading />
+      ) : products.length === 0 ? (
+        <Empty>لا توجد منتجات بعد</Empty>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products.map((product) => (
+            <Card key={product.id} className="overflow-hidden">
+              <div className="relative h-48">
+                <img src={imageUrl(product.image_url, { w: 500, h: 380 })} alt={product.name_ar} className="w-full h-full object-cover" />
+                <span className={`absolute top-3 start-3 px-3 py-1 rounded-full text-sm text-white ${product.available ? 'bg-green-500' : 'bg-red-500'}`}>
+                  {product.available ? 'متوفر' : 'غير متوفر'}
+                </span>
+              </div>
+              <CardContent className="p-4 space-y-3">
+                <h3 className="text-lg font-bold">{product.name_ar}</h3>
+                <p className="text-sm text-gray-600 line-clamp-2">{product.description_ar}</p>
+                <div className="flex justify-between">
+                  <span className="text-xl font-bold text-amber-600">{formatMoney(product.price)}</span>
+                  <span className="text-sm text-gray-500">{product.weight}</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => setEditing({ ...EMPTY, ...product })}>
+                    <Edit className="w-4 h-4" />
+                    تعديل
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => remove(product)} aria-label="حذف">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </header>
+      )}
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Products Grid */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="text-xl text-gray-600">جاري التحميل...</div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <Card key={product.id} className="overflow-hidden hover:shadow-xl transition-shadow">
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={`${product.image_url}?w=400&h=300&fit=crop`}
-                    alt={product.name_ar}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-medium ${
-                    product.available ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-                  }`}>
-                    {product.available ? 'متوفر' : 'غير متوفر'}
-                  </div>
-                </div>
-                
-                <CardContent className="p-4">
-                  <h3 className="text-lg font-bold mb-2">{product.name_ar}</h3>
-                  <p className="text-sm text-gray-600 mb-2 line-clamp-2">{product.description_ar}</p>
-                  <div className="flex items-center justify-between mt-4">
-                    <span className="text-xl font-bold text-amber-600">{product.price} ريال</span>
-                    <span className="text-sm text-gray-500">{product.weight}</span>
-                  </div>
-                  
-                  <div className="flex gap-2 mt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(product)}
-                      className="flex-1"
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      تعديل
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(product.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={Boolean(editing)} onOpenChange={(open) => !open && setEditing(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
-            <DialogTitle>تعديل المنتج</DialogTitle>
+            <DialogTitle>{editing?.id ? 'تعديل المنتج' : 'منتج جديد'}</DialogTitle>
           </DialogHeader>
-          
-          {editingProduct && (
-            <div className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">الاسم بالعربية</label>
-                  <Input
-                    value={editingProduct.name_ar}
-                    onChange={(e) => setEditingProduct({...editingProduct, name_ar: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">الاسم بالإنجليزية</label>
-                  <Input
-                    value={editingProduct.name_en}
-                    onChange={(e) => setEditingProduct({...editingProduct, name_en: e.target.value})}
-                  />
-                </div>
+          {editing && (
+            <form onSubmit={save} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="الاسم بالعربية"><Input value={editing.name_ar} onChange={set('name_ar')} required /></Field>
+                <Field label="الاسم بالإنجليزية"><Input value={editing.name_en} onChange={set('name_en')} required dir="ltr" /></Field>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">الوصف بالعربية</label>
-                <Textarea
-                  value={editingProduct.description_ar}
-                  onChange={(e) => setEditingProduct({...editingProduct, description_ar: e.target.value})}
-                  rows={3}
-                />
+              <Field label="الوصف بالعربية"><Textarea value={editing.description_ar} onChange={set('description_ar')} rows={3} /></Field>
+              <Field label="الوصف بالإنجليزية"><Textarea value={editing.description_en} onChange={set('description_en')} rows={3} dir="ltr" /></Field>
+              <div className="grid grid-cols-3 gap-4">
+                <Field label="السعر (ر.ع)"><Input type="number" min="0.001" step="0.001" value={editing.price} onChange={set('price')} required /></Field>
+                <Field label="الوزن"><Input value={editing.weight} onChange={set('weight')} placeholder="1 كغ" /></Field>
+                <Field label="الترتيب"><Input type="number" value={editing.sort_order} onChange={set('sort_order')} /></Field>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">الوصف بالإنجليزية</label>
-                <Textarea
-                  value={editingProduct.description_en}
-                  onChange={(e) => setEditingProduct({...editingProduct, description_en: e.target.value})}
-                  rows={3}
-                />
+              <Field label="رابط الصورة"><Input type="url" value={editing.image_url} onChange={set('image_url')} required dir="ltr" placeholder="https://" /></Field>
+              {editing.image_url && <img src={imageUrl(editing.image_url, { w: 600, h: 300 })} alt="" className="w-full h-40 object-cover rounded-md border" />}
+              <div className="flex items-center gap-3">
+                <Switch id="available" checked={editing.available} onCheckedChange={(available) => setEditing((p) => ({ ...p, available }))} />
+                <Label htmlFor="available">متوفر للبيع</Label>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">السعر (ريال)</label>
-                  <Input
-                    type="number"
-                    value={editingProduct.price}
-                    onChange={(e) => setEditingProduct({...editingProduct, price: parseFloat(e.target.value)})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">الوزن</label>
-                  <Input
-                    value={editingProduct.weight}
-                    onChange={(e) => setEditingProduct({...editingProduct, weight: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">رابط الصورة</label>
-                <Input
-                  value={editingProduct.image_url}
-                  onChange={(e) => setEditingProduct({...editingProduct, image_url: e.target.value})}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={editingProduct.available}
-                  onChange={(e) => setEditingProduct({...editingProduct, available: e.target.checked})}
-                  className="w-4 h-4"
-                />
-                <label className="text-sm font-medium">متوفر للبيع</label>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button onClick={handleSave} className="flex-1">
-                  <Save className="w-4 h-4 mr-2" />
-                  حفظ التغييرات
-                </Button>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  <X className="w-4 h-4 mr-2" />
-                  إلغاء
-                </Button>
-              </div>
-            </div>
+              <DialogFooter className="gap-2 pt-2">
+                <Button type="submit" disabled={saving}>{saving ? 'جاري الحفظ...' : 'حفظ'}</Button>
+                <Button type="button" variant="outline" onClick={() => setEditing(null)}>إلغاء</Button>
+              </DialogFooter>
+            </form>
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </AdminLayout>
   );
 };
 

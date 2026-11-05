@@ -1,0 +1,5 @@
+# Local development only (loaded automatically by `docker compose up`).
+services:
+  web:
+    ports:
+      - "8080:80"

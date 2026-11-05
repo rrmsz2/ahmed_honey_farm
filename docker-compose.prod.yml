@@ -1,0 +1,18 @@
+# Production on the Apps VM (10.10.70.20): publishes the web port for the Caddy
+# gateway on the FidaNet server (10.10.70.15 → reverse_proxy 10.10.70.20:${HOST_PORT}).
+services:
+  mongo:
+    container_name: honey-farm-mongo-1
+  backend:
+    container_name: honey-farm-backend-1
+  web:
+    container_name: honey-farm-web-1
+    ports:
+      - "${HOST_PORT:-8095}:80"
+    networks:
+      - fidanet_default
+      - default
+
+networks:
+  fidanet_default:
+    external: true

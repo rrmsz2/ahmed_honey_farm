@@ -1,77 +1,53 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { api, errorMessage, tokenStore } from '@/lib/api';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
+
+export const AuthProvider = ({ children }) => {
+  const [admin, setAdmin] = useState(null);
+  const [loading, setLoading] = useState(() => Boolean(tokenStore.get()));
+
+  useEffect(() => {
+    const onExpired = () => setAdmin(null);
+    window.addEventListener('auth:expired', onExpired);
+    if (tokenStore.get()) {
+      api
+        .get('/admin/me')
+        .then(({ data }) => setAdmin(data))
+        .catch(() => setAdmin(null))
+        .finally(() => setLoading(false));
+    }
+    return () => window.removeEventListener('auth:expired', onExpired);
+  }, []);
+
+  const login = useCallback(async (username, password) => {
+    try {
+      const { data } = await api.post('/admin/login', { username, password });
+      tokenStore.set(data.access_token);
+      setAdmin({ username });
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: errorMessage(error, 'فشل تسجيل الدخول') };
+    }
+  }, []);
+
+  const logout = useCallback(() => {
+    tokenStore.clear();
+    setAdmin(null);
+  }, []);
+
+  /** Store a fresh token (e.g. after a password change). */
+  const replaceToken = useCallback((token) => tokenStore.set(token), []);
+
+  const value = useMemo(
+    () => ({ admin, isAuthenticated: Boolean(admin), loading, login, logout, replaceToken }),
+    [admin, loading, login, logout, replaceToken],
+  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
-};
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Check if token exists in localStorage
-    const savedToken = localStorage.getItem('admin_token');
-    if (savedToken) {
-      setToken(savedToken);
-      setIsAuthenticated(true);
-      // Set default authorization header
-      axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
-    }
-    setLoading(false);
-  }, []);
-
-  const login = async (username, password) => {
-    try {
-      const response = await axios.post(`${API}/admin/login`, {
-        username,
-        password
-      });
-
-      const { access_token } = response.data;
-      
-      // Save token
-      localStorage.setItem('admin_token', access_token);
-      setToken(access_token);
-      setIsAuthenticated(true);
-      
-      // Set default authorization header
-      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Login error:', error);
-      return { 
-        success: false, 
-        error: error.response?.data?.detail || 'فشل تسجيل الدخول'
-      };
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('admin_token');
-    setToken(null);
-    setIsAuthenticated(false);
-    delete axios.defaults.headers.common['Authorization'];
-  };
-
-  const value = {
-    isAuthenticated,
-    token,
-    loading,
-    login,
-    logout
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

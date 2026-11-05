@@ -1,0 +1,80 @@
+name: Deploy honey-farm
+
+# Runs after CI succeeds on main (or manually). Executed by the dedicated self-hosted
+# runner on the Apps VM (10.10.70.20) — see docs/DEPLOY.md.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: honey-farm-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    # Unique label — only this app's runner picks it up (isolated from FidaNet and other apps).
+    runs-on: [self-hosted, honey-farm-prod]
+    timeout-minutes: 30
+    env:
+      APP_DIR: /opt/honey-farm
+      COMPOSE: docker compose -f docker-compose.yml -f docker-compose.prod.yml
+    steps:
+      - name: 🛡️ Server guard — 10.10.70.20 only
+        run: |
+          if hostname -I 2>/dev/null | tr ' ' '\n' | grep -qx '10.10.70.20'; then
+            echo "✓ Correct server: $(hostname)"
+          else
+            echo "❌ Not the Apps VM (expected 10.10.70.20) — stop this runner"; exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Sync code to $APP_DIR
+        run: |
+          mkdir -p "$APP_DIR"
+          rsync -a --delete \
+            --exclude '.git' --exclude '.env' --exclude 'node_modules' \
+            --exclude '__pycache__' --exclude '*.pyc' --exclude 'frontend/build' \
+            --exclude 'docker-compose.override.yml' \
+            ./ "$APP_DIR/"
+          cd "$APP_DIR"
+          if [ ! -f .env ] || ! grep -qE '^JWT_SECRET=.{32,}' .env; then
+            echo "❌ $APP_DIR/.env is missing or has no JWT_SECRET (see .env.example)"; exit 1
+          fi
+
+      - name: Build & start
+        working-directory: /opt/honey-farm
+        run: |
+          docker network inspect fidanet_default >/dev/null 2>&1 || docker network create fidanet_default
+          DOCKER_BUILDKIT=1 $COMPOSE build --pull --progress=plain
+          $COMPOSE up -d --remove-orphans
+
+      - name: Verify
+        working-directory: /opt/honey-farm
+        run: |
+          for i in $(seq 1 30); do
+            web=$(docker inspect -f '{{.State.Health.Status}}' honey-farm-web-1 2>/dev/null || true)
+            api=$(docker inspect -f '{{.State.Health.Status}}' honey-farm-backend-1 2>/dev/null || true)
+            if [ "$web" = healthy ] && [ "$api" = healthy ] \
+               && $COMPOSE exec -T web wget -qO- http://127.0.0.1/api/health | grep -q '"ok"'; then
+              echo "✅ honey-farm is healthy"
+              $COMPOSE ps
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "❌ Not healthy after 150s (web=$web backend=$api)"
+          $COMPOSE ps
+          $COMPOSE logs --tail=80 backend web
+          exit 1
+
+      - name: Clean up old images
+        if: success()
+        run: docker image prune -f >/dev/null
